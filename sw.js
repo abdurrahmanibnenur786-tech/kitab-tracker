@@ -1,20 +1,19 @@
-const CACHE_NAME = 'kitab-tracker-v1';
-const urlsToCache = [
-  '/kitab-tracker/',
-  '/kitab-tracker/index.html'
-];
+const CACHE_NAME = 'kitab-tracker-v2';
 
-// Install — ক্যাশে সেভ করো
+// Install — মূল ফাইল cache করো
 self.addEventListener('install', function(event){
   event.waitUntil(
     caches.open(CACHE_NAME).then(function(cache){
-      return cache.addAll(urlsToCache);
-    })
+      return cache.addAll([
+        './',
+        './index.html'
+      ]);
+    }).catch(function(err){ console.log('Cache error:', err); })
   );
   self.skipWaiting();
 });
 
-// Activate — পুরনো cache মুছে দাও
+// Activate — পুরনো cache মুছো
 self.addEventListener('activate', function(event){
   event.waitUntil(
     caches.keys().then(function(keys){
@@ -27,43 +26,22 @@ self.addEventListener('activate', function(event){
   self.clients.claim();
 });
 
-// Fetch — cache থেকে দাও, না থাকলে network থেকে
+// Fetch — cache থেকে দাও
 self.addEventListener('fetch', function(event){
   event.respondWith(
     caches.match(event.request).then(function(response){
       if(response) return response;
       return fetch(event.request).then(function(networkResponse){
-        if(networkResponse && networkResponse.status === 200){
-          var responseClone = networkResponse.clone();
+        if(networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic'){
+          var clone = networkResponse.clone();
           caches.open(CACHE_NAME).then(function(cache){
-            cache.put(event.request, responseClone);
+            cache.put(event.request, clone);
           });
         }
         return networkResponse;
       }).catch(function(){
-        return caches.match('/kitab-tracker/');
+        return caches.match('./index.html');
       });
     })
-  );
-});
-
-// Push notification সাপোর্ট
-self.addEventListener('push', function(event){
-  var data = event.data ? event.data.json() : {};
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'কিতাব ট্র্যাকার', {
-      body: data.body || 'অ্যালার্মের সময় হয়েছে!',
-      icon: '/kitab-tracker/icon-192.png',
-      badge: '/kitab-tracker/icon-192.png',
-      vibrate: [200, 100, 200],
-      data: data
-    })
-  );
-});
-
-self.addEventListener('notificationclick', function(event){
-  event.notification.close();
-  event.waitUntil(
-    clients.openWindow('/kitab-tracker/')
   );
 });
