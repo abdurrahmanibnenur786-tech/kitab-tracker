@@ -131,6 +131,7 @@ body{font-family:'Noto Sans Bengali',sans-serif;background:var(--bg);color:var(-
 .alarm-card-actions{display:flex;gap:4px;flex-shrink:0;}
 .alarm-card-actions button{background:transparent;border:none;cursor:pointer;font-size:14px;padding:2px 5px;border-radius:5px;transition:background 0.15s;}
 .alarm-card-actions button:hover{background:rgba(255,255,255,0.1);}
+.alarm-android-btn{background:rgba(52,152,219,0.12)!important;border:1px solid rgba(52,152,219,0.35)!important;border-radius:6px!important;color:#3498db!important;font-size:13px!important;padding:3px 7px!important;cursor:pointer;}
 .alarm-card-time{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
 .alarm-time-big{font-size:18px;font-weight:800;color:var(--gold);letter-spacing:0.5px;}
 .alarm-time-big.disabled-time{text-decoration:line-through;color:var(--muted);}
@@ -1050,6 +1051,54 @@ function formatTime12(hm){
   var mStr=m>0?':'+String(m).padStart(2,'0').replace(/[0-9]/g,function(x){return '০১২৩৪৫৬৭৮৯'[x];}):':০০';
   return toBn(h12)+mStr+' '+ampm;
 }
+
+// ===== Android Clock এ Alarm সেট =====
+function setAndroidAlarm(alm, kitabName){
+  var timeParts=(alm.time||'0:0').split(':');
+  var hour=parseInt(timeParts[0],10);
+  var min=parseInt(timeParts[1],10);
+
+  // message তৈরি: কিতাব নাম + alarm label
+  var msg='';
+  if(kitabName) msg+=kitabName;
+  if(alm.label) msg+=(msg?' — ':'')+alm.label;
+  if(!msg) msg='কিতাব পড়ার সময়';
+
+  // weekdays: Android Intent এ 1=Sunday, 2=Monday ... 7=Saturday
+  // আমাদের: 0=Sunday ... 6=Saturday → Android: +1
+  var almWds=alm.weekdays||[];
+
+  // Intent URL তৈরি
+  var intentUrl='intent:#Intent;action=android.intent.action.SET_ALARM';
+  intentUrl+=';S.android.intent.extra.alarm.MESSAGE='+encodeURIComponent(msg);
+  intentUrl+=';i.android.intent.extra.alarm.HOUR='+hour;
+  intentUrl+=';i.android.intent.extra.alarm.MINUTES='+min;
+  intentUrl+=';B.android.intent.extra.alarm.SKIP_UI=false';
+
+  // Weekdays যোগ করো (প্রতিদিন বা নির্দিষ্ট দিন)
+  if(almWds.length>0){
+    // Android এ days: 1=Sun,2=Mon,...,7=Sat
+    var androidDays=almWds.map(function(d){return d+1;});
+    intentUrl+=';'+androidDays.map(function(d){return 'i.android.intent.extra.alarm.DAYS='+d;}).join(';');
+  } else if(!alm.once && !alm.date && !alm.expiry && !alm.dates){
+    // প্রতিদিন — সব weekday পাঠাও
+    intentUrl+=';i.android.intent.extra.alarm.DAYS=1;i.android.intent.extra.alarm.DAYS=2;i.android.intent.extra.alarm.DAYS=3;i.android.intent.extra.alarm.DAYS=4;i.android.intent.extra.alarm.DAYS=5;i.android.intent.extra.alarm.DAYS=6;i.android.intent.extra.alarm.DAYS=7';
+  }
+
+  intentUrl+=';end';
+
+  // Android এ পাঠাও
+  try{
+    window.location.href=intentUrl;
+    showToast('📱 Android Clock এ পাঠানো হচ্ছে...', 3000);
+  } catch(e){
+    // fallback: সরাসরি link
+    var a=document.createElement('a');
+    a.href=intentUrl;
+    a.click();
+    showToast('📱 Android Clock এ পাঠানো হচ্ছে...', 3000);
+  }
+}
 function getUnit(id){ return gk(id).unit||"পৃষ্ঠা"; }
 function tds(){var d=new Date();var y=d.getFullYear();var m=String(d.getMonth()+1).padStart(2,'0');var day=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+day;}
 
@@ -1679,6 +1728,7 @@ function makeCard(kit){
       almHtml+='<div class="alarm-card-actions">';
       almHtml+='<button class="alarm-toggle-btn" data-id="'+id+'" data-idx="'+i+'" title="'+(isDisabled?'চালু করুন':'বন্ধ করুন')+'">'+(isDisabled?'🔴':'🟢')+'</button>';
       almHtml+='<button class="alarm-edit-btn" data-id="'+id+'" data-idx="'+i+'">✏️</button>';
+      almHtml+='<button class="alarm-android-btn" data-id="'+id+'" data-idx="'+i+'" title="Android এ সেট করুন">🔔📱</button>';
       almHtml+='<button class="alarm-del-btn" data-id="'+id+'" data-idx="'+i+'">✕</button>';
       almHtml+='</div></div>';
       // মাঝে: সময় + কাউন্টডাউন
@@ -2062,6 +2112,17 @@ function makeCard(kit){
       openAlarmSections.add(fid);
       renderAll();
       showToast(alm.disabled?'🔴 অ্যালার্ম বন্ধ করা হলো':'🟢 অ্যালার্ম চালু করা হলো', 2000);
+    });
+  });
+
+  // Android Clock এ সেট বাটন
+  ar.querySelectorAll('.alarm-android-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var fid=this.getAttribute('data-id');
+      var idx=parseInt(this.getAttribute('data-idx'));
+      var k2=gk(fid);
+      var alm=k2.alarms[idx];
+      setAndroidAlarm(alm, k2.name);
     });
   });
 
