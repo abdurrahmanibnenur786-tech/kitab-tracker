@@ -4,314 +4,355 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>প্রশ্নপত্র জেনারেটর</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;600;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
 <style>
-:root{--g:#1a5c38;--gold:#b8860b;--bd:#c8b97a;--panel:#fff9f0;}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Noto Serif Bengali',serif;background:#e8e0d0;color:#111;min-height:100vh;}
-.topbar{background:var(--g);color:#fff;padding:12px 18px;}
-.topbar h1{font-size:18px;font-weight:700;}
-.topbar p{font-size:11px;opacity:.8;margin-top:2px;}
-.layout{display:flex;min-height:calc(100vh - 52px);}
-.fp{width:420px;min-width:320px;background:var(--panel);border-right:2px solid var(--bd);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;height:calc(100vh - 52px);position:sticky;top:0;}
-.pp{flex:1;overflow-y:auto;background:#ccc6b6;padding:24px;display:flex;flex-direction:column;align-items:center;gap:16px;}
-.pvlbl{font-size:11px;color:#777;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
-.st{font-size:12px;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid var(--bd);padding-bottom:4px;margin-bottom:8px;}
-.tabs{display:flex;gap:6px;}
-.tab{flex:1;padding:10px 4px;border:2px solid var(--bd);border-radius:7px;background:#fff;font-family:'Noto Serif Bengali',serif;font-size:14px;font-weight:600;color:#666;cursor:pointer;text-align:center;}
-.tab.on{background:var(--g);color:#fff;border-color:var(--g);}
-.popts{display:flex;gap:7px;flex-wrap:wrap;}
-.po{padding:8px 14px;border:2px solid var(--bd);border-radius:7px;background:#fff;font-family:'Noto Serif Bengali',serif;font-size:13px;font-weight:600;color:#555;cursor:pointer;}
-.po.on{background:var(--gold);color:#fff;border-color:var(--gold);}
-.hint{font-size:11px;color:#999;font-style:italic;margin-top:5px;}
-.crow{display:flex;align-items:center;gap:8px;margin-top:8px;cursor:pointer;font-size:13px;}
-.crow input{width:18px;height:18px;}
-label{display:block;font-size:11px;font-weight:700;color:#666;margin-bottom:2px;margin-top:7px;}
-input[type=text],textarea{width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:6px;font-family:'Noto Serif Bengali',serif;font-size:13px;background:#fff;color:#111;}
-input[type=text]:focus,textarea:focus{outline:none;border-color:var(--g);}
-.r2{display:flex;gap:8px;}
-.r2>div{flex:1;}
-.qb{border:1.5px solid var(--bd);border-radius:8px;background:#fff;margin-bottom:10px;overflow:hidden;}
-.qh{background:var(--g);color:#fff;padding:7px 12px;font-size:13px;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
-.qd{background:none;border:none;color:rgba(255,255,255,.85);font-size:20px;cursor:pointer;padding:0 4px;line-height:1;}
-.qbd textarea{border:none;border-radius:0;font-size:13px;line-height:1.9;min-height:150px;resize:vertical;margin:0;width:100%;padding:8px 10px;}
-.qbd textarea:focus{outline:none;}
-.qmr{padding:6px 10px;background:#f9f5ec;border-top:1px solid var(--bd);display:flex;align-items:center;gap:8px;font-size:12px;color:#888;}
-.qmr input{width:70px;padding:4px 6px;font-size:12px;margin:0;}
-.aqb{width:100%;padding:12px;border:2px dashed var(--bd);border-radius:8px;background:#fff;font-family:'Noto Serif Bengali',serif;font-size:14px;font-weight:700;color:var(--g);cursor:pointer;margin-top:2px;}
-.tips{background:#eef7f1;border:1px solid #9dcfb0;border-radius:7px;padding:10px 12px;font-size:12px;color:var(--g);line-height:1.8;}
-.acts{display:flex;flex-direction:column;gap:9px;padding-top:10px;border-top:2px solid var(--bd);}
-.btn{width:100%;padding:13px;border:none;border-radius:8px;font-family:'Noto Serif Bengali',serif;font-size:14px;font-weight:700;cursor:pointer;}
-.bg{background:var(--g);color:#fff;}
-.br{background:#c0392b;color:#fff;}
-.bb{background:#1a478a;color:#fff;}
-.btg{background:#555;color:#fff;display:none;}
-.paper{background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.15);width:794px;min-height:1123px;padding:40px 50px;font-family:'Noto Serif Bengali',serif;color:#111;}
-.paper.narrow{padding:28px 32px;}
-.paper.landscape{width:1123px;min-height:794px;padding:32px 48px;}
-.paper.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic',serif;}
-.paper.twocol .qa{column-count:2;column-gap:40px;}
-.pb{text-align:center;font-family:'Noto Naskh Arabic',serif;font-size:18px;margin-bottom:5px;color:#333;}
-.pt{text-align:center;font-size:22px;font-weight:700;margin-bottom:2px;}
-.pa{text-align:center;font-size:14px;margin-bottom:2px;color:#333;}
-.pe{text-align:center;font-size:14px;font-weight:600;margin-bottom:6px;}
-.hr1{border:none;border-top:2.5px solid #111;margin:7px 0;}
-.hr2{border:none;border-top:1px solid #666;margin:5px 0;}
-.pm{display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:2px;}
-.paper.rtl .pm{flex-direction:row-reverse;}
-.pm.ar{font-family:'Noto Naskh Arabic',serif;font-size:14px;}
-.pi{text-align:center;font-size:13px;margin:8px 0 14px;font-style:italic;}
-.paper.rtl .pi{font-style:normal;font-family:'Noto Naskh Arabic',serif;}
-.qbp{margin-bottom:18px;break-inside:avoid;}
-.qhd{font-size:15px;font-weight:700;margin-bottom:5px;}
-.qqw{font-size:13px;margin-bottom:8px;padding:6px 10px;background:#f9f7f2;border-right:3px solid var(--gold);line-height:1.9;}
-.paper.rtl .qqw{border-right:none;border-left:3px solid var(--gold);}
-.sq{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;font-size:13px;line-height:1.8;}
-.paper.rtl .sq{flex-direction:row-reverse;}
-.sl{font-weight:700;white-space:nowrap;min-width:20px;}
-.st2{flex:1;}
-.sm{font-weight:700;white-space:nowrap;margin-left:auto;padding-left:10px;}
-.paper.rtl .sm{margin-left:0;margin-right:auto;padding-left:0;padding-right:10px;}
-.pq{display:flex;gap:6px;align-items:flex-start;margin-bottom:8px;font-size:14px;line-height:1.9;}
-.pn{font-weight:700;white-space:nowrap;min-width:72px;}
-.px{flex:1;}
-.pk{font-weight:700;white-space:nowrap;padding-left:10px;}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--g);color:#fff;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.2);opacity:0;transition:all .3s;pointer-events:none;z-index:999;}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-@media(max-width:860px){
-  .layout{flex-direction:column;}
-  .fp{width:100%;min-width:unset;height:auto;position:static;border-right:none;border-bottom:2px solid var(--bd);overflow-y:visible;}
-  .pp{display:none;padding:16px;}
-  .pp.show{display:flex;}
-  .btg{display:block!important;}
-}
-@media print{
-  .fp,.topbar,.pvlbl{display:none!important;}
-  .layout{display:block;}
-  .pp{display:block!important;padding:0;background:#fff;}
-  .paper{box-shadow:none;width:100%!important;}
+body { font-family: 'Noto Serif Bengali', serif; }
+.ar { font-family: 'Noto Naskh Arabic', serif; }
+.paper { background: white; width: 794px; min-height: 1123px; padding: 40px 50px; font-family: 'Noto Serif Bengali', serif; color: #111; }
+.paper.narrow { padding: 28px 32px; }
+.paper.landscape { width: 1123px; min-height: 794px; padding: 32px 48px; }
+.paper.rtl { direction: rtl; text-align: right; font-family: 'Noto Naskh Arabic', serif; }
+.paper.twocol .qa { column-count: 2; column-gap: 40px; }
+.pb { text-align: center; font-family: 'Noto Naskh Arabic', serif; font-size: 18px; margin-bottom: 5px; color: #333; }
+.pt { text-align: center; font-size: 22px; font-weight: 700; margin-bottom: 2px; }
+.paddr { text-align: center; font-size: 14px; margin-bottom: 2px; color: #333; }
+.pe { text-align: center; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.hr1 { border: none; border-top: 2.5px solid #111; margin: 7px 0; }
+.hr2 { border: none; border-top: 1px solid #666; margin: 5px 0; }
+.pm { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.paper.rtl .pm { flex-direction: row-reverse; }
+.pm.ar { font-family: 'Noto Naskh Arabic', serif; font-size: 14px; }
+.pi { text-align: center; font-size: 13px; margin: 8px 0 14px; font-style: italic; }
+.paper.rtl .pi { font-style: normal; font-family: 'Noto Naskh Arabic', serif; }
+.qbp { margin-bottom: 18px; break-inside: avoid; }
+.qhd { font-size: 15px; font-weight: 700; margin-bottom: 5px; }
+.qqw { font-size: 13px; margin-bottom: 8px; padding: 6px 10px; background: #f9f7f2; border-right: 3px solid #b8860b; line-height: 1.9; }
+.paper.rtl .qqw { border-right: none; border-left: 3px solid #b8860b; }
+.sq { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 6px; font-size: 13px; line-height: 1.8; }
+.paper.rtl .sq { flex-direction: row-reverse; }
+.sl { font-weight: 700; white-space: nowrap; min-width: 20px; }
+.st { flex: 1; }
+.sm { font-weight: 700; white-space: nowrap; margin-left: auto; padding-left: 10px; }
+.paper.rtl .sm { margin-left: 0; margin-right: auto; padding-left: 0; padding-right: 10px; }
+.pq { display: flex; gap: 6px; align-items: flex-start; margin-bottom: 8px; font-size: 14px; line-height: 1.9; }
+.pn { font-weight: 700; white-space: nowrap; min-width: 72px; }
+.px { flex: 1; }
+.pk { font-weight: 700; white-space: nowrap; padding-left: 10px; }
+.btn-lang { border: 2px solid #c8b97a; border-radius: 7px; background: white; font-family: 'Noto Serif Bengali', serif; font-size: 14px; font-weight: 600; color: #555; padding: 10px; cursor: pointer; flex: 1; text-align: center; }
+.btn-lang.on { background: #1a5c38; color: white; border-color: #1a5c38; }
+.btn-page { border: 2px solid #c8b97a; border-radius: 7px; background: white; font-family: 'Noto Serif Bengali', serif; font-size: 13px; font-weight: 600; color: #555; padding: 8px 14px; cursor: pointer; }
+.btn-page.on { background: #b8860b; color: white; border-color: #b8860b; }
+.inp { width: 100%; padding: 8px 10px; border: 1.5px solid #c8b97a; border-radius: 6px; font-family: 'Noto Serif Bengali', serif; font-size: 13px; background: white; color: #111; margin-bottom: 6px; }
+.inp:focus { outline: none; border-color: #1a5c38; }
+.lbl { display: block; font-size: 11px; font-weight: 700; color: #666; margin-bottom: 2px; margin-top: 6px; }
+.qblock { border: 1.5px solid #c8b97a; border-radius: 8px; background: white; margin-bottom: 10px; overflow: hidden; }
+.qhead { background: #1a5c38; color: white; padding: 7px 12px; font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+.qdel { background: none; border: none; color: rgba(255,255,255,.85); font-size: 20px; cursor: pointer; padding: 0 4px; line-height: 1; font-family: monospace; }
+.qta { border: none; font-size: 13px; line-height: 1.9; min-height: 150px; resize: vertical; width: 100%; padding: 8px 10px; font-family: 'Noto Serif Bengali', serif; }
+.qta:focus { outline: none; }
+.qmrow { padding: 6px 10px; background: #f9f5ec; border-top: 1px solid #c8b97a; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #888; }
+.addq { width: 100%; padding: 12px; border: 2px dashed #c8b97a; border-radius: 8px; background: white; font-family: 'Noto Serif Bengali', serif; font-size: 14px; font-weight: 700; color: #1a5c38; cursor: pointer; margin-top: 4px; }
+.mainbtn { width: 100%; padding: 13px; border: none; border-radius: 8px; font-family: 'Noto Serif Bengali', serif; font-size: 14px; font-weight: 700; cursor: pointer; margin-bottom: 8px; }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(30px); background: #1a5c38; color: white; padding: 11px 22px; border-radius: 8px; font-size: 14px; font-weight: 600; opacity: 0; transition: all .3s; pointer-events: none; z-index: 999; white-space: nowrap; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+@media print {
+  .no-print { display: none !important; }
+  #previewPanel { display: block !important; background: white; padding: 0; }
+  .paper { box-shadow: none !important; width: 100% !important; }
 }
 </style>
 </head>
-<body>
-<div class="topbar">
-  <h1>📄 প্রশ্নপত্র জেনারেটর</h1>
-  <p>জামিয়া কুরআনিয়া ইমদাদুল উলুম ফুলছোঁয়া</p>
+<body class="bg-gray-200 min-h-screen">
+
+<!-- TOPBAR -->
+<div class="no-print bg-green-900 text-white px-4 py-3 shadow-md">
+  <div class="font-bold text-lg">📄 প্রশ্নপত্র জেনারেটর</div>
+  <div class="text-xs opacity-75 mt-1">জামিয়া কুরআনিয়া ইমদাদুল উলুম ফুলছোঁয়া</div>
 </div>
-<div class="layout">
-  <div class="fp" id="fp">
+
+<div class="flex min-h-screen no-print" id="mainLayout">
+
+  <!-- FORM PANEL -->
+  <div class="bg-amber-50 border-r-2 border-yellow-600 overflow-y-auto p-4 flex flex-col gap-4" style="width:420px;min-width:320px;height:calc(100vh - 56px);position:sticky;top:0;" id="formPanel">
+
+    <!-- LANGUAGE -->
     <div>
-      <div class="st">ভাষা ও ধরন</div>
-      <div class="tabs">
-        <button class="tab on" id="tb">বাংলা</button>
-        <button class="tab" id="ta">আরবি</button>
-        <button class="tab" id="tu">উর্দু</button>
+      <div class="text-xs font-bold text-green-900 uppercase tracking-wider border-b-2 border-yellow-600 pb-1 mb-2">ভাষা ও ধরন</div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-lang on" id="tb">বাংলা</button>
+        <button class="btn-lang" id="ta">আরবি</button>
+        <button class="btn-lang" id="tu">উর্দু</button>
       </div>
     </div>
+
+    <!-- PAGE -->
     <div>
-      <div class="st">পেজ সেটিং</div>
-      <div class="popts">
-        <button class="po on" id="pn">A4 Normal</button>
-        <button class="po" id="pw">A4 Narrow</button>
-        <button class="po" id="pl">Landscape</button>
+      <div class="text-xs font-bold text-green-900 uppercase tracking-wider border-b-2 border-yellow-600 pb-1 mb-2">পেজ সেটিং</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;">
+        <button class="btn-page on" id="pn">A4 Normal</button>
+        <button class="btn-page" id="pw">A4 Narrow</button>
+        <button class="btn-page" id="pl">Landscape</button>
       </div>
-      <div class="hint">প্রশ্ন বেশি হলে Narrow বা Landscape ব্যবহার করুন</div>
-      <label class="crow" id="tcrow">
-        <input type="checkbox" id="tc"> দুই কলামে সাজান (কম প্রশ্নে)
+      <div class="text-xs text-gray-400 italic mt-1">প্রশ্ন বেশি হলে Narrow বা Landscape ব্যবহার করুন</div>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:8px;cursor:pointer;font-size:13px;" id="tcrow">
+        <input type="checkbox" id="tc" style="width:18px;height:18px;"> দুই কলামে সাজান (কম প্রশ্নে)
       </label>
     </div>
+
+    <!-- HEADER BANGLA -->
     <div id="hb">
-      <div class="st">হেডার তথ্য</div>
-      <label>পরীক্ষার নাম</label>
-      <input type="text" id="be" value="দ্বিতীয় সামিয়ক পরীক্ষা ১৪৪৭ হি. / ২০২৫ ঈ.">
-      <label>মারহালা / শ্রেণি</label>
-      <input type="text" id="bm" value="মারহালা: ইবতিদাইয়াহ ২ (তাইসীর ২)">
-      <label>বিষয়</label>
-      <input type="text" id="bs" value="বিষয়: দ্বীনিয়াত">
-      <label>কিতাব</label>
-      <input type="text" id="bk" value="কিতাব: তা'লীমুল ইসলাম (৪র্থ খণ্ড)">
-      <div class="r2">
-        <div><label>তারিখ (হিজরি)</label><input type="text" id="bdh" value="২৩ রবিউল আউয়াল"></div>
-        <div><label>তারিখ (ইংরেজি)</label><input type="text" id="bde" value="১৭ সেপ্টেম্বর"></div>
+      <div class="text-xs font-bold text-green-900 uppercase tracking-wider border-b-2 border-yellow-600 pb-1 mb-2">হেডার তথ্য</div>
+      <label class="lbl">পরীক্ষার নাম</label>
+      <input class="inp" type="text" id="be" value="দ্বিতীয় সামিয়ক পরীক্ষা ১৪৪৭ হি. / ২০২৫ ঈ.">
+      <label class="lbl">মারহালা / শ্রেণি</label>
+      <input class="inp" type="text" id="bm" value="মারহালা: ইবতিদাইয়াহ ২ (তাইসীর ২)">
+      <label class="lbl">বিষয়</label>
+      <input class="inp" type="text" id="bs" value="বিষয়: দ্বীনিয়াত">
+      <label class="lbl">কিতাব</label>
+      <input class="inp" type="text" id="bk" value="কিতাব: তা'লীমুল ইসলাম (৪র্থ খণ্ড)">
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;"><label class="lbl">তারিখ (হিজরি)</label><input class="inp" type="text" id="bdh" value="২৩ রবিউল আউয়াল"></div>
+        <div style="flex:1;"><label class="lbl">তারিখ (ইংরেজি)</label><input class="inp" type="text" id="bde" value="১৭ সেপ্টেম্বর"></div>
       </div>
-      <div class="r2">
-        <div><label>সময়</label><input type="text" id="bt" value="৩ ঘণ্টা"></div>
-        <div><label>পূর্ণমান</label><input type="text" id="bM" value="১০০"></div>
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;"><label class="lbl">সময়</label><input class="inp" type="text" id="bt" value="৩ ঘণ্টা"></div>
+        <div style="flex:1;"><label class="lbl">পূর্ণমান</label><input class="inp" type="text" id="bM" value="১০০"></div>
       </div>
-      <label>নির্দেশনা</label>
-      <input type="text" id="bi" value="প্রতিটি প্রশ্নের উত্তর দাও, সকল প্রশ্নের মান সমান">
+      <label class="lbl">নির্দেশনা</label>
+      <input class="inp" type="text" id="bi" value="প্রতিটি প্রশ্নের উত্তর দাও, সকল প্রশ্নের মান সমান">
     </div>
+
+    <!-- HEADER ARABIC -->
     <div id="ha" style="display:none;">
-      <div class="st">هيدر المعلومات</div>
-      <label>اسم الامتحان</label>
-      <input type="text" id="ae" value="ورقة الأسئلة للاختبار الحولي" style="direction:rtl;text-align:right;">
-      <label>الصف</label>
-      <input type="text" id="ac" value="جماعة النحو والصرف" style="direction:rtl;text-align:right;">
-      <label>المادة</label>
-      <input type="text" id="as" value="علم النحو" style="direction:rtl;text-align:right;">
-      <label>الكتاب</label>
-      <input type="text" id="ak" value="هداية النحو" style="direction:rtl;text-align:right;">
-      <div class="r2">
-        <div><label>التاريخ</label><input type="text" id="ad" value="٤ شعبان * ٢٤ يناير" style="direction:rtl;text-align:right;"></div>
-        <div><label>السنة</label><input type="text" id="ay" value="١٤٤٧ هـ" style="direction:rtl;text-align:right;"></div>
+      <div class="text-xs font-bold text-green-900 uppercase tracking-wider border-b-2 border-yellow-600 pb-1 mb-2">هيدر المعلومات</div>
+      <label class="lbl">اسم الامتحان</label>
+      <input class="inp" type="text" id="ae" value="ورقة الأسئلة للاختبار الحولي" style="direction:rtl;text-align:right;">
+      <label class="lbl">الصف</label>
+      <input class="inp" type="text" id="ac" value="جماعة النحو والصرف" style="direction:rtl;text-align:right;">
+      <label class="lbl">المادة</label>
+      <input class="inp" type="text" id="as2" value="علم النحو" style="direction:rtl;text-align:right;">
+      <label class="lbl">الكتاب</label>
+      <input class="inp" type="text" id="ak" value="هداية النحو" style="direction:rtl;text-align:right;">
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;"><label class="lbl">التاريخ</label><input class="inp" type="text" id="ad" value="٤ شعبان * ٢٤ يناير" style="direction:rtl;text-align:right;"></div>
+        <div style="flex:1;"><label class="lbl">السنة</label><input class="inp" type="text" id="ay" value="١٤٤٧ هـ" style="direction:rtl;text-align:right;"></div>
       </div>
-      <div class="r2">
-        <div><label>الوقت</label><input type="text" id="at" value="ثلاث ساعات" style="direction:rtl;text-align:right;"></div>
-        <div><label>الدرجات</label><input type="text" id="aM" value="مائة" style="direction:rtl;text-align:right;"></div>
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;"><label class="lbl">الوقت</label><input class="inp" type="text" id="at2" value="ثلاث ساعات" style="direction:rtl;text-align:right;"></div>
+        <div style="flex:1;"><label class="lbl">الدرجات</label><input class="inp" type="text" id="aM" value="مائة" style="direction:rtl;text-align:right;"></div>
       </div>
-      <label>تفصيل الدرجات</label>
-      <input type="text" id="aMd" value="(الأربعة منها على حسن الكتابة وجودة الأسلوب)" style="direction:rtl;text-align:right;">
-      <label>التعليمات</label>
-      <input type="text" id="ai" value="(أجب عن ثلاث فقط)" style="direction:rtl;text-align:right;">
+      <label class="lbl">تفصيل الدرجات</label>
+      <input class="inp" type="text" id="aMd" value="(الأربعة منها على حسن الكتابة وجودة الأسلوب)" style="direction:rtl;text-align:right;">
+      <label class="lbl">التعليمات</label>
+      <input class="inp" type="text" id="ai" value="(أجب عن ثلاث فقط)" style="direction:rtl;text-align:right;">
     </div>
+
+    <!-- HEADER URDU -->
     <div id="hu" style="display:none;">
-      <div class="st">ہیڈر معلومات</div>
-      <label>امتحان کا نام</label>
-      <input type="text" id="ue" value="نصف سالانہ امتحان" style="direction:rtl;text-align:right;">
-      <label>جماعت</label>
-      <input type="text" id="uc" value="" style="direction:rtl;text-align:right;">
-      <label>مضمون</label>
-      <input type="text" id="us" value="" style="direction:rtl;text-align:right;">
-      <label>کتاب</label>
-      <input type="text" id="uk" value="" style="direction:rtl;text-align:right;">
-      <div class="r2">
-        <div><label>تاریخ</label><input type="text" id="ud" value="" style="direction:rtl;text-align:right;"></div>
-        <div><label>وقت</label><input type="text" id="ut" value="" style="direction:rtl;text-align:right;"></div>
+      <div class="text-xs font-bold text-green-900 uppercase tracking-wider border-b-2 border-yellow-600 pb-1 mb-2">ہیڈر معلومات</div>
+      <label class="lbl">امتحان کا نام</label>
+      <input class="inp" type="text" id="ue" value="نصف سالانہ امتحان" style="direction:rtl;text-align:right;">
+      <label class="lbl">جماعت</label>
+      <input class="inp" type="text" id="uc" value="" style="direction:rtl;text-align:right;">
+      <label class="lbl">مضمون</label>
+      <input class="inp" type="text" id="us" value="" style="direction:rtl;text-align:right;">
+      <label class="lbl">کتاب</label>
+      <input class="inp" type="text" id="uk" value="" style="direction:rtl;text-align:right;">
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;"><label class="lbl">تاریخ</label><input class="inp" type="text" id="ud" value="" style="direction:rtl;text-align:right;"></div>
+        <div style="flex:1;"><label class="lbl">وقت</label><input class="inp" type="text" id="ut2" value="" style="direction:rtl;text-align:right;"></div>
       </div>
-      <label>کل نمبر</label>
-      <input type="text" id="uM" value="" style="direction:rtl;text-align:right;">
-      <label>ہدایات</label>
-      <input type="text" id="ui" value="" style="direction:rtl;text-align:right;">
+      <label class="lbl">کل نمبر</label>
+      <input class="inp" type="text" id="uM" value="" style="direction:rtl;text-align:right;">
+      <label class="lbl">ہدایات</label>
+      <input class="inp" type="text" id="ui" value="" style="direction:rtl;text-align:right;">
     </div>
+
+    <!-- QUESTIONS -->
     <div>
-      <div class="st">প্রশ্নসমূহ</div>
-      <div class="tips"><b>লেখার নিয়ম:</b><br>• প্রতিটি সাব-প্রশ্ন আলাদা লাইনে লিখুন<br>• বাংলায়: <b>ক.</b> খ. গ. দিয়ে শুরু করুন<br>• আরবিতে: <b>أ.</b> ب. ج. দিয়ে শুরু করুন<br>• নম্বর লাইনের শেষে লিখুন: যেমন <b>৮</b> বা <b>12</b><br>• আরবিতে قوله: দিয়ে শুরু করলে বক্স হবে</div>
-      <br>
+      <div class="text-xs font-bold text-green-900 uppercase tracking-wider border-b-2 border-yellow-600 pb-1 mb-2">প্রশ্নসমূহ</div>
+      <div class="text-xs text-green-800 bg-green-50 border border-green-300 rounded-lg p-3 mb-3" style="line-height:1.8;">
+        <b>লেখার নিয়ম:</b><br>
+        • বাংলায়: <b>ক.</b> খ. গ. দিয়ে সাব-প্রশ্ন<br>
+        • আরবিতে: <b>أ.</b> ب. ج. দিয়ে সাব-প্রশ্ন<br>
+        • নম্বর লাইনের শেষে: যেমন <b>৮</b> বা <b>12</b><br>
+        • আরবিতে قوله: দিলে বক্স হবে
+      </div>
       <div id="ql"></div>
-      <button class="aqb" id="aqb">＋ নতুন প্রশ্ন যোগ করুন</button>
+      <button class="addq" id="aqb">＋ নতুন প্রশ্ন যোগ করুন</button>
     </div>
-    <div class="acts">
-      <button class="btn btg" id="tgb">👁️ প্রিভিউ দেখুন / লুকান</button>
-      <button class="btn bg" id="pvb">🔄 প্রিভিউ আপডেট করুন</button>
-      <button class="btn br" id="pdfb">🖨️ PDF হিসেবে সেভ করুন</button>
-      <button class="btn bb" id="wb">📄 Word ফাইল ডাউনলোড করুন</button>
+
+    <!-- ACTION BUTTONS -->
+    <div class="border-t-2 border-yellow-600 pt-3">
+      <button class="mainbtn" style="background:#555;color:white;display:none;" id="tgb">👁️ প্রিভিউ দেখুন / লুকান</button>
+      <button class="mainbtn" style="background:#1a5c38;color:white;" id="pvb">🔄 প্রিভিউ আপডেট করুন</button>
+      <button class="mainbtn" style="background:#c0392b;color:white;" id="pdfb">🖨️ PDF হিসেবে সেভ করুন</button>
+      <button class="mainbtn" style="background:#1a478a;color:white;" id="wb">📄 Word ফাইল ডাউনলোড করুন</button>
     </div>
+
+  </div><!-- /formPanel -->
+
+  <!-- PREVIEW PANEL -->
+  <div class="flex-1 overflow-y-auto p-6 flex flex-col items-center gap-4" id="previewPanel" style="background:#ccc6b6;">
+    <div class="text-xs text-gray-500 font-bold tracking-widest uppercase">প্রিভিউ</div>
+    <div class="paper shadow-xl" id="paper"></div>
   </div>
-  <div class="pp" id="pp">
-    <div class="pvlbl">প্রিভিউ</div>
-    <div class="paper" id="paper"></div>
-  </div>
-</div>
+
+</div><!-- /mainLayout -->
+
 <div class="toast" id="toast"></div>
+
 <script>
-var L='bangla',P='normal',Q=[],QI=0;
+var L='bangla', P='normal', Q=[], QI=0;
 
-function init(){
-  document.getElementById('tb').onclick=function(){setL('bangla');};
-  document.getElementById('ta').onclick=function(){setL('arabic');};
-  document.getElementById('tu').onclick=function(){setL('urdu');};
-  document.getElementById('pn').onclick=function(){setP('normal');};
-  document.getElementById('pw').onclick=function(){setP('narrow');};
-  document.getElementById('pl').onclick=function(){setP('landscape');};
-  document.getElementById('tc').onchange=function(){rp();};
-  document.getElementById('aqb').onclick=function(){addQ();};
-  document.getElementById('pvb').onclick=function(){rp();tk('প্রিভিউ আপডেট হয়েছে ✓');};
-  document.getElementById('pdfb').onclick=doPDF;
-  document.getElementById('wb').onclick=doWord;
-  document.getElementById('tgb').onclick=function(){document.getElementById('pp').classList.toggle('show');};
-  var ins=document.querySelectorAll('#hb input,#ha input,#hu input');
-  for(var i=0;i<ins.length;i++){ins[i].oninput=function(){rp();};}
-  addQ();rp();
-}
+window.onload = function() {
+  // Language buttons
+  document.getElementById('tb').onclick = function(){ setL('bangla'); };
+  document.getElementById('ta').onclick = function(){ setL('arabic'); };
+  document.getElementById('tu').onclick = function(){ setL('urdu'); };
 
-if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',init);
-} else {
-  init();
-}
+  // Page buttons
+  document.getElementById('pn').onclick = function(){ setP('normal'); };
+  document.getElementById('pw').onclick = function(){ setP('narrow'); };
+  document.getElementById('pl').onclick = function(){ setP('landscape'); };
+
+  // Checkbox
+  document.getElementById('tc').onchange = function(){ rp(); };
+
+  // Add question
+  document.getElementById('aqb').onclick = function(){ addQ(); };
+
+  // Action buttons
+  document.getElementById('pvb').onclick = function(){ rp(); tk('প্রিভিউ আপডেট হয়েছে ✓'); };
+  document.getElementById('pdfb').onclick = doPDF;
+  document.getElementById('wb').onclick = doWord;
+
+  // Toggle preview (mobile)
+  document.getElementById('tgb').onclick = function(){
+    var pp = document.getElementById('previewPanel');
+    pp.style.display = pp.style.display === 'none' ? 'flex' : 'none';
+  };
+
+  // Header inputs auto-update
+  var ids = ['be','bm','bs','bk','bdh','bde','bt','bM','bi',
+             'ae','ac','as2','ak','ad','ay','at2','aM','aMd','ai',
+             'ue','uc','us','uk','ud','ut2','uM','ui'];
+  for(var i=0;i<ids.length;i++){
+    var el = document.getElementById(ids[i]);
+    if(el) el.oninput = function(){ rp(); };
+  }
+
+  // Mobile check
+  if(window.innerWidth <= 860){
+    document.getElementById('formPanel').style.width = '100%';
+    document.getElementById('formPanel').style.height = 'auto';
+    document.getElementById('formPanel').style.position = 'static';
+    document.getElementById('formPanel').style.borderRight = 'none';
+    document.getElementById('formPanel').style.borderBottom = '2px solid #c8b97a';
+    document.getElementById('mainLayout').style.flexDirection = 'column';
+    document.getElementById('previewPanel').style.display = 'none';
+    document.getElementById('tgb').style.display = 'block';
+  }
+
+  addQ();
+  rp();
+};
 
 function setL(l){
   L=l;
-  var ls=['bangla','arabic','urdu'],ts=['tb','ta','tu'],hs=['hb','ha','hu'];
-  for(var i=0;i<ls.length;i++){
-    document.getElementById(ts[i]).className='tab'+(ls[i]===l?' on':'');
-    document.getElementById(hs[i]).style.display=ls[i]===l?'':'none';
+  var ts={bangla:'tb',arabic:'ta',urdu:'tu'};
+  var hs={bangla:'hb',arabic:'ha',urdu:'hu'};
+  for(var k in ts){
+    document.getElementById(ts[k]).className = 'btn-lang' + (k===l?' on':'');
+    document.getElementById(hs[k]).style.display = k===l?'':'none';
   }
-  document.getElementById('tcrow').style.display=l==='bangla'?'':'none';
-  rql();rp();
+  document.getElementById('tcrow').style.display = l==='bangla'?'':'none';
+  rql(); rp();
 }
 
 function setP(p){
   P=p;
   var ps={normal:'pn',narrow:'pw',landscape:'pl'};
-  for(var k in ps) document.getElementById(ps[k]).className='po'+(k===p?' on':'');
+  for(var k in ps) document.getElementById(ps[k]).className = 'btn-page' + (k===p?' on':'');
   rp();
 }
 
 function sv(){
   for(var i=0;i<Q.length;i++){
-    var ta=document.getElementById('qt'+Q[i].id),mk=document.getElementById('qm'+Q[i].id);
-    if(ta)Q[i].t=ta.value;if(mk)Q[i].m=mk.value;
+    var ta=document.getElementById('qt'+Q[i].id);
+    var mk=document.getElementById('qm'+Q[i].id);
+    if(ta) Q[i].t=ta.value;
+    if(mk) Q[i].m=mk.value;
   }
 }
 
-function addQ(){sv();QI++;Q.push({id:QI,t:'',m:''});rql();}
+function addQ(){ sv(); QI++; Q.push({id:QI,t:'',m:''}); rql(); }
 
-function delQ(id){sv();Q=Q.filter(function(q){return q.id!==id;});rql();}
+function delQ(id){ sv(); Q=Q.filter(function(q){return q.id!==id;}); rql(); }
 
 function rql(){
   sv();
-  var c=document.getElementById('ql');c.innerHTML='';
+  var c=document.getElementById('ql'); c.innerHTML='';
   var rtl=L!=='bangla';
   for(var i=0;i<Q.length;i++){
     var q=Q[i];
     var lbl=L==='bangla'?'প্রশ্ন '+(i+1):L==='arabic'?'السؤال '+(i+1):'سوال '+(i+1);
     var ph=rtl?'قوله: متن السؤال...\nأ. سؤال فرعي 8\nب. سؤال فرعي 12':'এখানে প্রশ্ন লিখুন...\nক. সাব-প্রশ্ন ১ ৮\nখ. সাব-প্রশ্ন ২ ১২';
-    var d=document.createElement('div');d.className='qb';
-    d.innerHTML='<div class="qh"><span>'+lbl+'</span><button class="qd" data-id="'+q.id+'">✕</button></div>'+
-      '<div class="qbd"><textarea id="qt'+q.id+'" placeholder="'+ph+'"'+(rtl?' style="direction:rtl;text-align:right;"':'')+'>'+q.t+'</textarea></div>'+
-      '<div class="qmr"><span>মোট নম্বর:</span><input type="text" id="qm'+q.id+'" value="'+q.m+'" placeholder="৩২"></div>';
+    var d=document.createElement('div');
+    d.className='qblock';
+    d.innerHTML='<div class="qhead"><span>'+lbl+'</span><button class="qdel" data-id="'+q.id+'">✕</button></div>'+
+      '<div><textarea class="qta" id="qt'+q.id+'" placeholder="'+ph+'"'+(rtl?' style="direction:rtl;text-align:right;"':'')+'>'+q.t+'</textarea></div>'+
+      '<div class="qmrow"><span>মোট নম্বর:</span><input type="text" style="width:70px;padding:4px 6px;font-size:12px;border:1px solid #c8b97a;border-radius:4px;" id="qm'+q.id+'" value="'+q.m+'" placeholder="৩২"></div>';
     c.appendChild(d);
-    (function(qid){d.querySelector('.qd').onclick=function(){delQ(qid);};})(q.id);
+    (function(qid){ d.querySelector('.qdel').onclick=function(){ delQ(qid); }; })(q.id);
   }
 }
 
-function g(id){var e=document.getElementById(id);return e?e.value:'';}
-function bn(n){return String(n).split('').map(function(c){return'০১২৩৪৫৬৭৮৯'[+c]||c;}).join('');}
+function g(id){ var e=document.getElementById(id); return e?e.value:''; }
+function bn(n){ return String(n).split('').map(function(c){return'০১২৩৪৫৬৭৮৯'[+c]||c;}).join(''); }
 
 function rp(){
   sv();
   var el=document.getElementById('paper');
-  el.className='paper'+(P==='narrow'?' narrow':P==='landscape'?' landscape':'')+(L!=='bangla'?' rtl':'')+(document.getElementById('tc').checked&&L==='bangla'?' twocol':'');
-  el.innerHTML=L==='bangla'?bB():L==='arabic'?bA():bU();
+  var cls='paper';
+  if(P==='narrow') cls+=' narrow';
+  if(P==='landscape') cls+=' landscape';
+  if(L!=='bangla') cls+=' rtl';
+  if(document.getElementById('tc').checked && L==='bangla') cls+=' twocol';
+  el.className=cls;
+  el.innerHTML = L==='bangla'?bB():L==='arabic'?bA():bU();
 }
 
 function bB(){
   var h='<div class="pb">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ</div>'+
     '<div class="pt">জামিয়া কুরআনিয়া ইমদাদুল উলুম ফুলছোঁয়া</div>'+
-    '<div class="pa">বাকিলা, হাজীগঞ্জ, চাঁদপুর।</div>'+
+    '<div class="paddr">বাকিলা, হাজীগঞ্জ, চাঁদপুর।</div>'+
     '<div class="pe">'+g('be')+'</div><hr class="hr1">'+
     '<div class="pm"><span>'+g('bm')+'</span><span>'+g('bs')+'</span></div>'+
     '<div class="pm"><span>'+g('bk')+'</span></div><hr class="hr2">'+
     '<div class="pm" style="justify-content:center;">'+g('bdh')+' * '+g('bde')+'&nbsp;#&nbsp;সময়: '+g('bt')+'&nbsp;#&nbsp;পূর্ণমান: '+g('bM')+'</div>'+
     '<hr class="hr1"><div class="pi">('+g('bi')+')</div><div class="qa">';
   for(var i=0;i<Q.length;i++){
-    var q=Q[i],txt=q.t.trim();if(!txt)continue;
+    var q=Q[i],txt=q.t.trim(); if(!txt) continue;
     h+='<div class="qbp">';
-    var lines=txt.split('\n'),fd=false;
+    var lines=txt.split('\n'), fd=false;
     for(var j=0;j<lines.length;j++){
-      var ln=lines[j].trim();if(!ln)continue;
+      var ln=lines[j].trim(); if(!ln) continue;
       var sm=ln.match(/^([কখগঘ][\.\)।]\s*)(.*)/u);
       var mm=ln.match(/(\d+|[০-৯]+)\s*$/);
-      var m=mm?mm[1]:'',cl=mm?ln.replace(/\s*(\d+|[০-৯]+)\s*$/,'').trim():ln;
+      var m=mm?mm[1]:'', cl=mm?ln.replace(/\s*(\d+|[০-৯]+)\s*$/,'').trim():ln;
       if(!fd&&!sm){
-        h+='<div class="pq"><span class="pn">প্রশ্ন: '+bn(i+1)+' ।</span><span class="px">'+cl+'</span>'+(m?'<span class="pk">'+m+'</span>':'')+'</div>';fd=true;
-      }else if(sm){
+        h+='<div class="pq"><span class="pn">প্রশ্ন: '+bn(i+1)+' ।</span><span class="px">'+cl+'</span>'+(m?'<span class="pk">'+m+'</span>':'')+'</div>';
+        fd=true;
+      } else if(sm){
         var r=sm[2],mm2=r.match(/(\d+|[০-৯]+)\s*$/),m2=mm2?mm2[1]:'',t2=r.replace(/\s*(\d+|[০-৯]+)\s*$/,'').trim();
-        h+='<div class="sq"><span class="sl">'+sm[1].trim()+'</span><span class="st2">'+t2+'</span>'+(m2?'<span class="sm">'+m2+'</span>':'')+'</div>';fd=true;
-      }else{
-        h+='<div class="pq"><span class="pn"></span><span class="px">'+cl+'</span>'+(m?'<span class="pk">'+m+'</span>':'')+'</div>';fd=true;
+        h+='<div class="sq"><span class="sl">'+sm[1].trim()+'</span><span class="st">'+t2+'</span>'+(m2?'<span class="sm">'+m2+'</span>':'')+'</div>';
+        fd=true;
+      } else {
+        h+='<div class="pq"><span class="pn"></span><span class="px">'+cl+'</span>'+(m?'<span class="pk">'+m+'</span>':'')+'</div>';
+        fd=true;
       }
     }
     h+='</div>';
@@ -322,24 +363,25 @@ function bB(){
 function bA(){
   var af="font-family:'Noto Naskh Arabic',serif;";
   var AN=['الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع','الثامن','التاسع','العاشر'];
-  var h='<div style="'+af+'text-align:center;"><div class="pb" style="font-size:20px;">بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</div>'+
+  var h='<div style="'+af+'text-align:center;">'+
+    '<div class="pb" style="font-size:20px;">بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</div>'+
     '<div style="font-size:14px;margin-bottom:3px;">'+g('ae')+'</div>'+
     '<div style="font-size:18px;font-weight:700;">الجامعة القرآنية إمداد العلوم فولصوا، باكيلا، حاجي غنج، صاندفور</div></div>'+
-    '<hr class="hr1"><div class="pm ar">الصف: '+g('ac')+' # المادة: '+g('as')+' # الكتاب: '+g('ak')+'</div>'+
-    '<div class="pm ar">التاريخ: '+g('ad')+' # الوقت: '+g('at')+'&nbsp; عام '+g('ay')+'</div>'+
+    '<hr class="hr1"><div class="pm ar">الصف: '+g('ac')+' # المادة: '+g('as2')+' # الكتاب: '+g('ak')+'</div>'+
+    '<div class="pm ar">التاريخ: '+g('ad')+' # الوقت: '+g('at2')+'&nbsp; عام '+g('ay')+'</div>'+
     '<div class="pm ar">الدرجات: '+g('aM')+' '+g('aMd')+'</div>'+
     '<hr class="hr1"><div class="pi" style="'+af+'">'+g('ai')+'</div><div class="qa">';
   for(var i=0;i<Q.length;i++){
-    var q=Q[i],txt=q.t.trim();if(!txt)continue;
-    h+='<div class="qbp"><div class="qhd" style="'+af+'">'+'السؤال '+(AN[i]||i+1)+':</div>';
+    var q=Q[i],txt=q.t.trim(); if(!txt) continue;
+    h+='<div class="qbp"><div class="qhd" style="'+af+'">السؤال '+(AN[i]||i+1)+':</div>';
     var lines=txt.split('\n');
     for(var j=0;j<lines.length;j++){
-      var ln=lines[j].trim();if(!ln)continue;
+      var ln=lines[j].trim(); if(!ln) continue;
       if(ln.match(/^قوله[:\s]/)){h+='<div class="qqw" style="'+af+'">'+ln+'</div>';continue;}
       var sm=ln.match(/^([أبجدهوزح][\.\:\)]\s*)(.*)/u);
       if(sm){var mm=sm[2].match(/(\d+)\s*$/),m=mm?mm[1]:'',t=sm[2].replace(/\s*\d+\s*$/,'').trim();
-        h+='<div class="sq" style="'+af+'"><span class="sl">'+sm[1].trim()+'</span><span class="st2">'+t+'</span>'+(m?'<span class="sm">'+m+'</span>':'')+'</div>';
-      }else{h+='<div style="'+af+'font-size:14px;line-height:1.9;margin-bottom:4px;">'+ln+'</div>';}
+        h+='<div class="sq" style="'+af+'"><span class="sl">'+sm[1].trim()+'</span><span class="st">'+t+'</span>'+(m?'<span class="sm">'+m+'</span>':'')+'</div>';
+      } else { h+='<div style="'+af+'font-size:14px;line-height:1.9;margin-bottom:4px;">'+ln+'</div>'; }
     }
     h+='</div>';
   }
@@ -349,47 +391,48 @@ function bA(){
 function bU(){
   var af="font-family:'Noto Naskh Arabic',serif;";
   var UN=['اوّل','دوم','سوم','چہارم','پنجم','ششم','ہفتم','ہشتم','نہم','دہم'];
-  var h='<div style="'+af+'text-align:center;"><div class="pb" style="font-size:20px;">بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</div>'+
+  var h='<div style="'+af+'text-align:center;">'+
+    '<div class="pb" style="font-size:20px;">بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</div>'+
     '<div style="font-size:18px;font-weight:700;">جامعہ قرآنیہ امداد العلوم پھولچھوا، باکیلا، حاجی گنج، چاندپور</div>'+
     '<div style="font-size:15px;font-weight:600;margin-top:3px;">'+g('ue')+'</div></div>'+
     '<hr class="hr1"><div class="pm ar">جماعت: '+g('uc')+' # مضمون: '+g('us')+' # کتاب: '+g('uk')+'</div>'+
-    '<div class="pm ar">تاریخ: '+g('ud')+' # وقت: '+g('ut')+' # کل نمبر: '+g('uM')+'</div>'+
+    '<div class="pm ar">تاریخ: '+g('ud')+' # وقت: '+g('ut2')+' # کل نمبر: '+g('uM')+'</div>'+
     '<hr class="hr1"><div class="pi" style="'+af+'">'+g('ui')+'</div><div class="qa">';
   for(var i=0;i<Q.length;i++){
-    var q=Q[i],txt=q.t.trim();if(!txt)continue;
-    h+='<div class="qbp"><div class="qhd" style="'+af+'">'+'سوال '+(UN[i]||i+1)+':</div>';
+    var q=Q[i],txt=q.t.trim(); if(!txt) continue;
+    h+='<div class="qbp"><div class="qhd" style="'+af+'">سوال '+(UN[i]||i+1)+':</div>';
     var lines=txt.split('\n');
     for(var j=0;j<lines.length;j++){
-      var ln=lines[j].trim();if(!ln)continue;
+      var ln=lines[j].trim(); if(!ln) continue;
       var sm=ln.match(/^([الف-ی]{1,2}[\.\:\)]\s*|[أبجدهوزح][\.\:\)]\s*)(.*)/u);
       if(sm){var mm=sm[2].match(/(\d+)\s*$/),m=mm?mm[1]:'',t=sm[2].replace(/\s*\d+\s*$/,'').trim();
-        h+='<div class="sq" style="'+af+'"><span class="sl">'+sm[1].trim()+'</span><span class="st2">'+t+'</span>'+(m?'<span class="sm">'+m+'</span>':'')+'</div>';
-      }else{h+='<div style="'+af+'font-size:14px;line-height:1.9;margin-bottom:4px;">'+ln+'</div>';}
+        h+='<div class="sq" style="'+af+'"><span class="sl">'+sm[1].trim()+'</span><span class="st">'+t+'</span>'+(m?'<span class="sm">'+m+'</span>':'')+'</div>';
+      } else { h+='<div style="'+af+'font-size:14px;line-height:1.9;margin-bottom:4px;">'+ln+'</div>'; }
     }
     h+='</div>';
   }
   return h+'</div>';
 }
 
-function tk(msg){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show';setTimeout(function(){t.className='toast';},2800);}
+function tk(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'; setTimeout(function(){t.className='toast';},2800); }
 
-function doPDF(){rp();setTimeout(function(){window.print();tk('Print dialog → Save as PDF বেছে নিন');},300);}
+function doPDF(){ rp(); setTimeout(function(){ window.print(); tk('Print → Save as PDF বেছে নিন'); },300); }
 
 async function doWord(){
-  rp();tk('Word ফাইল তৈরি হচ্ছে...');
+  rp(); tk('Word ফাইল তৈরি হচ্ছে...');
   try{
-    var D=docx,rtl=L!=='bangla',ls=P==='landscape',nw=P==='narrow';
+    var D=docx, rtl=L!=='bangla', ls=P==='landscape', nw=P==='narrow';
     var tc=document.getElementById('tc').checked&&!rtl;
     var mg=nw?{top:720,right:720,bottom:720,left:720}:{top:1080,right:1080,bottom:1080,left:1080};
-    var af='Traditional Arabic',bf='Kalpurush',df=rtl?af:bf;
-    var pw=ls?16838:11906,cw=pw-mg.left-mg.right;
+    var af='Traditional Arabic', bf='Kalpurush', df=rtl?af:bf;
+    var pw=ls?16838:11906, cw=pw-mg.left-mg.right;
     function mp(tx,o){o=o||{};return new D.Paragraph({bidirectional:rtl,alignment:o.al||(rtl?D.AlignmentType.RIGHT:D.AlignmentType.LEFT),children:[new D.TextRun({text:tx||'',bold:o.b||false,size:o.sz||24,font:o.fn||df,rtl:rtl})],spacing:{after:o.af||80}});}
     function hr1(){return new D.Paragraph({border:{bottom:{style:D.BorderStyle.SINGLE,size:6,color:'111111',space:1}},spacing:{after:80},children:[]});}
     function hr2(){return new D.Paragraph({border:{bottom:{style:D.BorderStyle.SINGLE,size:2,color:'666666',space:1}},spacing:{after:60},children:[]});}
-    function sqp(sl,st,sm){
+    function sqp(sl,st2,sm){
       var ch=[];
-      if(rtl){ch.push(new D.TextRun({text:(sm?sm+'\t':'')+st+' '+sl,font:df,size:24,rtl:true}));}
-      else{ch.push(new D.TextRun({text:sl+' '+st,font:df,size:24}));if(sm)ch.push(new D.TextRun({text:'\t'+sm,bold:true,font:df,size:24}));}
+      if(rtl){ch.push(new D.TextRun({text:(sm?sm+'\t':'')+st2+' '+sl,font:df,size:24,rtl:true}));}
+      else{ch.push(new D.TextRun({text:sl+' '+st2,font:df,size:24}));if(sm)ch.push(new D.TextRun({text:'\t'+sm,bold:true,font:df,size:24}));}
       return new D.Paragraph({bidirectional:rtl,alignment:rtl?D.AlignmentType.RIGHT:D.AlignmentType.LEFT,tabStops:[{type:D.TabStopType.RIGHT,position:cw}],children:ch,spacing:{after:60},indent:{left:360}});
     }
     var ch=[];
@@ -398,63 +441,69 @@ async function doWord(){
       ch.push(mp('জামিয়া কুরআনিয়া ইমদাদুল উলুম ফুলছোঁয়া',{al:D.AlignmentType.CENTER,b:true,sz:32,af:40}));
       ch.push(mp('বাকিলা, হাজীগঞ্জ, চাঁদপুর।',{al:D.AlignmentType.CENTER,sz:22,af:40}));
       ch.push(mp(g('be'),{al:D.AlignmentType.CENTER,b:true,sz:24,af:80}));
-      ch.push(hr1());ch.push(mp(g('bm')+'   #   '+g('bs'),{sz:22,af:40}));
-      ch.push(mp(g('bk'),{sz:22,af:40}));ch.push(hr2());
+      ch.push(hr1());
+      ch.push(mp(g('bm')+'   #   '+g('bs'),{sz:22,af:40}));
+      ch.push(mp(g('bk'),{sz:22,af:40}));
+      ch.push(hr2());
       ch.push(mp(g('bdh')+' * '+g('bde')+'  #  সময়: '+g('bt')+'  #  পূর্ণমান: '+g('bM'),{al:D.AlignmentType.CENTER,sz:22,af:60}));
-      ch.push(hr1());ch.push(mp('('+g('bi')+')',{al:D.AlignmentType.CENTER,sz:22,af:160}));
+      ch.push(hr1());
+      ch.push(mp('('+g('bi')+')',{al:D.AlignmentType.CENTER,sz:22,af:160}));
       for(var i=0;i<Q.length;i++){
-        var q=Q[i],txt=q.t.trim();if(!txt)continue;
-        var lines=txt.split('\n'),fd=false;
+        var q=Q[i],txt=q.t.trim(); if(!txt) continue;
+        var lines=txt.split('\n'), fd=false;
         for(var j=0;j<lines.length;j++){
-          var ln=lines[j].trim();if(!ln)continue;
+          var ln=lines[j].trim(); if(!ln) continue;
           var sm=ln.match(/^([কখগঘ][\.\)।]\s*)(.*)/u);
-          var mm=ln.match(/(\d+|[০-৯]+)\s*$/),m=mm?mm[1]:'';
+          var mm=ln.match(/(\d+|[০-৯]+)\s*$/), m=mm?mm[1]:'';
           var cl=mm?ln.replace(/\s*(\d+|[০-৯]+)\s*$/,'').trim():ln;
           if(!fd&&!sm){
-            var c2=[new D.TextRun({text:'প্রশ্ন: '+bn(i+1)+' । ',b:true,font:bf,size:26}),new D.TextRun({text:cl,font:bf,size:26})];
-            if(m)c2.push(new D.TextRun({text:'\t'+m,bold:true,font:bf,size:26}));
-            ch.push(new D.Paragraph({tabStops:[{type:D.TabStopType.RIGHT,position:cw}],children:c2,spacing:{after:80}}));fd=true;
-          }else if(sm){
+            var c2=[new D.TextRun({text:'প্রশ্ন: '+bn(i+1)+' । ',bold:true,font:bf,size:26}),new D.TextRun({text:cl,font:bf,size:26})];
+            if(m) c2.push(new D.TextRun({text:'\t'+m,bold:true,font:bf,size:26}));
+            ch.push(new D.Paragraph({tabStops:[{type:D.TabStopType.RIGHT,position:cw}],children:c2,spacing:{after:80}}));
+            fd=true;
+          } else if(sm){
             var r=sm[2],mm2=r.match(/(\d+|[০-৯]+)\s*$/),m2=mm2?mm2[1]:'',t2=r.replace(/\s*(\d+|[০-৯]+)\s*$/,'').trim();
-            ch.push(sqp(sm[1].trim(),t2,m2));fd=true;
-          }else{ch.push(mp(cl,{sz:24,af:60}));}
+            ch.push(sqp(sm[1].trim(),t2,m2)); fd=true;
+          } else { ch.push(mp(cl,{sz:24,af:60})); }
         }
       }
-    }else if(L==='arabic'){
+    } else if(L==='arabic'){
       var AN=['الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع'];
       ch.push(mp(g('ae'),{al:D.AlignmentType.CENTER,fn:af,sz:22,af:60}));
       ch.push(mp('الجامعة القرآنية إمداد العلوم فولصوا، باكيلا، حاجي غنج، صاندفور',{al:D.AlignmentType.CENTER,b:true,fn:af,sz:28,af:60}));
       ch.push(hr1());
-      ch.push(mp('الصف: '+g('ac')+' # المادة: '+g('as')+' # الكتاب: '+g('ak'),{fn:af,sz:22,af:40}));
-      ch.push(mp('التاريخ: '+g('ad')+' # الوقت: '+g('at')+'  عام '+g('ay'),{fn:af,sz:22,af:40}));
+      ch.push(mp('الصف: '+g('ac')+' # المادة: '+g('as2')+' # الكتاب: '+g('ak'),{fn:af,sz:22,af:40}));
+      ch.push(mp('التاريخ: '+g('ad')+' # الوقت: '+g('at2')+'  عام '+g('ay'),{fn:af,sz:22,af:40}));
       ch.push(mp('الدرجات: '+g('aM')+' '+g('aMd'),{fn:af,sz:22,af:60}));
-      ch.push(hr1());ch.push(mp(g('ai'),{al:D.AlignmentType.CENTER,fn:af,sz:22,af:160}));
+      ch.push(hr1());
+      ch.push(mp(g('ai'),{al:D.AlignmentType.CENTER,fn:af,sz:22,af:160}));
       for(var i=0;i<Q.length;i++){
-        var q=Q[i],txt=q.t.trim();if(!txt)continue;
+        var q=Q[i],txt=q.t.trim(); if(!txt) continue;
         ch.push(mp('السؤال '+(AN[i]||i+1)+':',{b:true,fn:af,sz:28,af:60}));
         var lines=txt.split('\n');
         for(var j=0;j<lines.length;j++){
-          var ln=lines[j].trim();if(!ln)continue;
+          var ln=lines[j].trim(); if(!ln) continue;
           if(ln.match(/^قوله[:\s]/)){ch.push(new D.Paragraph({bidirectional:true,alignment:D.AlignmentType.RIGHT,children:[new D.TextRun({text:ln,font:af,size:24,rtl:true})],spacing:{after:80},indent:{right:200,left:200}}));continue;}
           var sm=ln.match(/^([أبجدهوزح][\.\:\)]\s*)(.*)/u);
           if(sm){var mm=sm[2].match(/(\d+)\s*$/),m=mm?mm[1]:'',t=sm[2].replace(/\s*\d+\s*$/,'').trim();ch.push(sqp(sm[1].trim(),t,m));}
           else{ch.push(mp(ln,{fn:af,sz:24,af:60}));}
         }
       }
-    }else{
+    } else {
       var UN=['اوّل','دوم','سوم','چہارم','پنجم'];
       ch.push(mp('جامعہ قرآنیہ امداد العلوم پھولچھوا، باکیلا، حاجی گنج، چاندپور',{al:D.AlignmentType.CENTER,b:true,fn:af,sz:28,af:60}));
       ch.push(mp(g('ue'),{al:D.AlignmentType.CENTER,b:true,fn:af,sz:24,af:60}));
       ch.push(hr1());
       ch.push(mp('جماعت: '+g('uc')+' # مضمون: '+g('us')+' # کتاب: '+g('uk'),{fn:af,sz:22,af:40}));
-      ch.push(mp('تاریخ: '+g('ud')+' # وقت: '+g('ut')+' # کل نمبر: '+g('uM'),{fn:af,sz:22,af:60}));
-      ch.push(hr1());ch.push(mp(g('ui'),{al:D.AlignmentType.CENTER,fn:af,sz:22,af:160}));
+      ch.push(mp('تاریخ: '+g('ud')+' # وقت: '+g('ut2')+' # کل نمبر: '+g('uM'),{fn:af,sz:22,af:60}));
+      ch.push(hr1());
+      ch.push(mp(g('ui'),{al:D.AlignmentType.CENTER,fn:af,sz:22,af:160}));
       for(var i=0;i<Q.length;i++){
-        var q=Q[i],txt=q.t.trim();if(!txt)continue;
+        var q=Q[i],txt=q.t.trim(); if(!txt) continue;
         ch.push(mp('سوال '+(UN[i]||i+1)+':',{b:true,fn:af,sz:28,af:60}));
         var lines=txt.split('\n');
         for(var j=0;j<lines.length;j++){
-          var ln=lines[j].trim();if(!ln)continue;
+          var ln=lines[j].trim(); if(!ln) continue;
           var sm=ln.match(/^([الف-ی]{1,2}[\.\:\)]\s*|[أبجدهوزح][\.\:\)]\s*)(.*)/u);
           if(sm){var mm=sm[2].match(/(\d+)\s*$/),m=mm?mm[1]:'',t=sm[2].replace(/\s*\d+\s*$/,'').trim();ch.push(sqp(sm[1].trim(),t,m));}
           else{ch.push(mp(ln,{fn:af,sz:24,af:60}));}
@@ -462,15 +511,15 @@ async function doWord(){
       }
     }
     var sp={page:{size:{width:ls?16838:11906,height:ls?11906:16838,orientation:ls?D.PageOrientation.LANDSCAPE:D.PageOrientation.PORTRAIT},margin:mg}};
-    if(tc)sp.column={count:2,space:720};
+    if(tc) sp.column={count:2,space:720};
     var doc=new D.Document({sections:[{properties:sp,children:ch}]});
     var blob=await D.Packer.toBlob(doc);
     var url=URL.createObjectURL(blob);
-    var a=document.createElement('a');a.href=url;
+    var a=document.createElement('a'); a.href=url;
     a.download='prashnopotro_'+(L==='bangla'?'bangla':L==='arabic'?'arabic':'urdu')+'.docx';
-    document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     tk('✅ Word ফাইল ডাউনলোড হয়েছে!');
-  }catch(e){tk('⚠️ ত্রুটি: '+e.message);console.error(e);}
+  } catch(e){ tk('⚠️ ত্রুটি: '+e.message); console.error(e); }
 }
 </script>
 </body>
