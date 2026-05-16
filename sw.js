@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kitab-tracker-v5';
+const CACHE_NAME = 'kitab-tracker-v6';
 
 const CACHE_FILES = [
   './',
