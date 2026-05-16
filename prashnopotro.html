@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>প্রশ্নপত্র জেনারেটর</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;600;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+body { font-family: 'Noto Serif Bengali', serif; }
+
+/* ======= PAPER BASE ======= */
+.paper {
+  background: white;
+  color: #111;
+  position: relative;
+}
+/* A4 Normal */
+.paper.a4 { width: 794px; min-height: 1123px; padding: 50px 60px; font-size: 13.5px; }
+/* A4 Narrow */
+.paper.narrow { width: 794px; min-height: 1123px; padding: 36px 40px; font-size: 13px; }
+/* Landscape */
+.paper.landscape { width: 1123px; min-height: 794px; padding: 40px 55px; font-size: 13px; }
+
+/* ======= BANGLA PAPER ======= */
+.paper.bangla { font-family: 'Noto Serif Bengali', serif; direction: ltr; }
+.paper.bangla .bism { text-align:center; font-family:'Noto Naskh Arabic',serif; font-size:16px; margin-bottom:3px; }
+.paper.bangla .hdr-title { text-align:center; font-size:22px; font-weight:700; margin-bottom:1px; }
+.paper.bangla .hdr-addr { text-align:center; font-size:13px; margin-bottom:2px; }
+.paper.bangla .hdr-exam { text-align:center; font-size:14px; font-weight:700; margin-bottom:1px; }
+.paper.bangla .hdr-line { text-align:center; font-size:13px; font-weight:600; margin-bottom:1px; }
+.paper.bangla .hdr-hr { border:none; border-top:2px solid #111; margin:5px 0; }
+.paper.bangla .hdr-inst { text-align:center; font-size:12.5px; font-style:italic; margin:6px 0 14px; }
+
+/* Bangla question rows — key: flex with tab-like right alignment */
+.paper.bangla .q-area { width: 100%; }
+.paper.bangla .q-main {
+  display: table; width: 100%; margin-bottom: 4px;
+}
+.paper.bangla .q-main-label {
+  display: table-cell; font-weight:700; white-space:nowrap;
+  width: 78px; vertical-align: top; font-size:14px; padding-top:1px;
+}
+.paper.bangla .q-main-text {
+  display: table-cell; vertical-align: top; font-size:14px; line-height:1.85;
+}
+.paper.bangla .q-main-mark {
+  display: table-cell; font-weight:700; white-space:nowrap;
+  width: 32px; text-align: right; vertical-align: top; font-size:14px; padding-top:1px;
+}
+.paper.bangla .q-sub {
+  display: table; width: 100%; margin-bottom: 4px; padding-left: 14px;
+}
+.paper.bangla .q-sub-label {
+  display: table-cell; font-weight:700; white-space:nowrap;
+  width: 24px; vertical-align: top; font-size:13px; padding-top:1px;
+}
+.paper.bangla .q-sub-text {
+  display: table-cell; vertical-align: top; font-size:13px; line-height:1.85;
+}
+.paper.bangla .q-sub-mark {
+  display: table-cell; font-weight:700; white-space:nowrap;
+  width: 32px; text-align: right; vertical-align: top; font-size:13px; padding-top:1px;
+}
+.paper.bangla .q-cont {
+  display: table; width: 100%; margin-bottom: 3px; padding-left: 78px;
+}
+.paper.bangla .q-cont-text {
+  display: table-cell; vertical-align: top; font-size:14px; line-height:1.85;
+}
+.paper.bangla .q-cont-mark {
+  display: table-cell; font-weight:700; white-space:nowrap;
+  width: 32px; text-align: right; vertical-align: top; font-size:14px;
+}
+/* Two column */
+.paper.bangla .twocol { column-count:2; column-gap:36px; }
+
+/* ======= ARABIC / URDU PAPER ======= */
+.paper.arabic, .paper.urdu {
+  font-family: 'Noto Naskh Arabic', serif;
+  direction: rtl; text-align: right;
+}
+.paper.arabic .bism, .paper.urdu .bism {
+  text-align:center; font-size:20px; margin-bottom:3px;
+}
+.paper.arabic .hdr-main-line {
+  text-align:center; font-size:16px; font-weight:700; margin-bottom:2px; line-height:1.6;
+  font-family:'Noto Naskh Arabic',serif;
+}
+.paper.urdu .hdr-main-line {
+  text-align:center; font-size:16px; font-weight:700; margin-bottom:2px; line-height:1.6;
+  font-family:'Noto Naskh Arabic',serif;
+}
+.paper.arabic .hdr-hr, .paper.urdu .hdr-hr {
+  border:none; border-top:2px solid #111; margin:5px 0;
+}
+.paper.arabic .hdr-meta, .paper.urdu .hdr-meta {
+  font-size:13px; font-weight:600; margin-bottom:2px;
+  font-family:'Noto Naskh Arabic',serif;
+}
+.paper.arabic .hdr-inst, .paper.urdu .hdr-inst {
+  text-align:center; font-size:13px; margin:6px 0 14px;
+  font-family:'Noto Naskh Arabic',serif;
+}
+
+/* Arabic/Urdu question heading */
+.paper.arabic .q-heading, .paper.urdu .q-heading {
+  font-weight:700; font-size:15px; margin-top:12px; margin-bottom:5px;
+  font-family:'Noto Naskh Arabic',serif;
+}
+/* قوله / مصنف کا قول box */
+.paper.arabic .qawl-box, .paper.urdu .qawl-box {
+  font-size:13px; line-height:1.9; margin-bottom:7px;
+  padding: 5px 10px 5px 8px;
+  background:#f9f7f2;
+  border-left: 3px solid #b8860b;
+  font-family:'Noto Naskh Arabic',serif;
+}
+/* Arabic sub-question row — mark on LEFT, label on RIGHT */
+.paper.arabic .q-sub-ar, .paper.urdu .q-sub-ar {
+  display: table; width: 100%; margin-bottom: 4px;
+  font-family:'Noto Naskh Arabic',serif;
+}
+.paper.arabic .q-sub-ar-mark, .paper.urdu .q-sub-ar-mark {
+  display: table-cell; font-weight:700; white-space:nowrap;
+  width: 32px; text-align: left; vertical-align: top; font-size:13px; padding-top:1px;
+}
+.paper.arabic .q-sub-ar-text, .paper.urdu .q-sub-ar-text {
+  display: table-cell; vertical-align: top; font-size:13px; line-height:1.85;
+}
+.paper.arabic .q-sub-ar-label, .paper.urdu .q-sub-ar-label {
+  display: table-cell; font-weight:700; white-space:nowrap;
+  width: 24px; text-align: right; vertical-align: top; font-size:13px; padding-top:1px;
+}
+/* plain arabic line */
+.paper.arabic .q-plain, .paper.urdu .q-plain {
+  font-size:13px; line-height:1.9; margin-bottom:3px;
+  font-family:'Noto Naskh Arabic',serif;
+}
+
+/* ======= FORM ======= */
+.inp { width:100%; padding:7px 10px; border:1.5px solid #c8b97a; border-radius:6px;
+  font-family:'Noto Serif Bengali',serif; font-size:13px; background:white; color:#111;
+  margin-bottom:5px; box-sizing:border-box; }
+.inp:focus { outline:none; border-color:#1a5c38; }
+.lbl { display:block; font-size:11px; font-weight:700; color:#555; margin-bottom:2px; margin-top:5px; }
+.stitle { font-size:12px; font-weight:700; color:#1a5c38; text-transform:uppercase;
+  letter-spacing:1px; border-bottom:2px solid #c8b97a; padding-bottom:4px; margin-bottom:8px; }
+.langbtn { flex:1; padding:9px 4px; border:2px solid #c8b97a; border-radius:7px; background:white;
+  font-family:'Noto Serif Bengali',serif; font-size:14px; font-weight:600; color:#555; cursor:pointer; }
+.langbtn.on { background:#1a5c38; color:white; border-color:#1a5c38; }
+.pagebtn { padding:7px 13px; border:2px solid #c8b97a; border-radius:7px; background:white;
+  font-family:'Noto Serif Bengali',serif; font-size:13px; font-weight:600; color:#555; cursor:pointer; }
+.pagebtn.on { background:#b8860b; color:white; border-color:#b8860b; }
+.qblock { border:1.5px solid #c8b97a; border-radius:8px; background:white; margin-bottom:10px; overflow:hidden; }
+.qhead { background:#1a5c38; color:white; padding:7px 12px; font-size:13px; font-weight:700;
+  display:flex; justify-content:space-between; align-items:center; }
+.qdelbtn { background:none; border:none; color:white; font-size:20px; cursor:pointer; padding:0 4px; }
+.qta { border:none; font-size:13px; line-height:1.9; min-height:150px; resize:vertical;
+  width:100%; padding:8px 10px; font-family:'Noto Serif Bengali',serif;
+  display:block; box-sizing:border-box; }
+.qta:focus { outline:none; }
+.qmrow { padding:6px 10px; background:#f9f5ec; border-top:1px solid #c8b97a;
+  display:flex; align-items:center; gap:8px; font-size:12px; color:#888; }
+.actbtn { width:100%; padding:12px; border:none; border-radius:8px;
+  font-family:'Noto Serif Bengali',serif; font-size:14px; font-weight:700;
+  cursor:pointer; margin-bottom:8px; }
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(30px);
+  background:#1a5c38; color:white; padding:11px 22px; border-radius:8px; font-size:14px;
+  font-weight:600; opacity:0; transition:all .3s; pointer-events:none; z-index:9999; }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+@media(max-width:860px) {
+  #mainlayout { flex-direction:column !important; }
+  #formpanel { width:100% !important; height:auto !important; position:static !important;
+    border-right:none !important; border-bottom:2px solid #c8b97a; overflow-y:visible !important; }
+  #prevpanel { display:none; }
+  #prevpanel.open { display:flex !important; }
+  #togglebtn { display:block !important; }
+}
+@media print {
+  #topbar, #formpanel { display:none !important; }
+  #mainlayout { display:block !important; }
+  #prevpanel { display:block !important; background:white !important; padding:0 !important; }
+  .paper { box-shadow:none !important; }
+  @page { margin: 10mm; }
+}
+</style>
+</head>
+<body class="bg-gray-300 min-h-screen">
+
+<div id="topbar" style="background:#1a5c38;color:white;padding:12px 18px;">
+  <div style="font-size:18px;font-weight:700;">📄 প্রশ্নপত্র জেনারেটর</div>
+  <div style="font-size:11px;opacity:.8;">জামিয়া কুরআনিয়া ইমদাদুল উলুম ফুলছোঁয়া</div>
+</div>
+
+<div id="mainlayout" style="display:flex;min-height:calc(100vh - 54px);">
+
+  <!-- FORM PANEL -->
+  <div id="formpanel" style="width:420px;min-width:300px;background:#fff9f0;border-right:2px solid #c8b97a;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;height:calc(100vh - 54px);position:sticky;top:0;">
+
+    <!-- LANGUAGE -->
+    <div>
+      <div class="stitle">ভাষা ও ধরন</div>
+      <div style="display:flex;gap:6px;">
+        <button class="langbtn on" id="btn-b">বাংলা</button>
+        <button class="langbtn" id="btn-a">আরবি</button>
+        <button class="langbtn" id="btn-u">উর্দু</button>
+      </div>
+    </div>
+
+    <!-- PAGE -->
+    <div>
+      <div class="stitle">পেজ সেটিং</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:6px;">
+        <button class="pagebtn on" id="pg-a4">A4 Normal</button>
+        <button class="pagebtn" id="pg-narrow">A4 Narrow</button>
+        <button class="pagebtn" id="pg-land">Landscape</button>
+      </div>
+      <label id="twocolrow" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;margin-top:4px;">
+        <input type="checkbox" id="twocol" style="width:18px;height:18px;"> দুই কলামে সাজান
+      </label>
+      <div style="font-size:11px;color:#999;font-style:italic;margin-top:3px;">Narrow বা Landscape + দুই কলাম = একই পেজে দুইবার প্রশ্ন</div>
+    </div>
+
+    <!-- BANGLA HEADER -->
+    <div id="hdr-b">
+      <div class="stitle">হেডার তথ্য</div>
+      <label class="lbl">পরীক্ষার নাম</label>
+      <input class="inp" type="text" id="b-exam" value="দ্বিতীয় সামিয়ক পরীক্ষা ১৪৪৭ হি. / ২০২৫ ঈ.">
+      <label class="lbl">মারহালা / শ্রেণি</label>
+      <input class="inp" type="text" id="b-marhala" value="মারহালা: ইবতিদাইয়াহ ২ (তাইসীর ২)">
+      <label class="lbl">বিষয়</label>
+      <input class="inp" type="text" id="b-subj" value="বিষয়: দ্বীনিয়াত">
+      <label class="lbl">কিতাব</label>
+      <input class="inp" type="text" id="b-kitab" value="কিতাব: তা'লীমুল ইসলাম (৪র্থ খণ্ড)">
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;"><label class="lbl">তারিখ (হিজরি)</label><input class="inp" type="text" id="b-dh" value="২৩ রবিউল আউয়াল"></div>
+        <div style="flex:1;"><label class="lbl">তারিখ (ইংরেজি)</label><input class="inp" type="text" id="b-de" value="১৭ সেপ্টেম্বর"></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;"><label class="lbl">সময়</label><input class="inp" type="text" id="b-time" value="৩ ঘণ্টা"></div>
+        <div style="flex:1;"><label class="lbl">পূর্ণমান</label><input class="inp" type="text" id="b-marks" value="১০০"></div>
+      </div>
+      <label class="lbl">নির্দেশনা</label>
+      <input class="inp" type="text" id="b-inst" value="প্রতিটি প্রশ্নের উত্তর দাও, সকল প্রশ্নের মান সমান">
+    </div>
+
+    <!-- ARABIC HEADER -->
+    <div id="hdr-a" style="display:none;">
+      <div class="stitle">هيدر المعلومات</div>
+      <label class="lbl">ورقة الأسئلة (اسم الامتحان كاملاً)</label>
+      <input class="inp" type="text" id="a-waraqah" value="ورقة الأسئلة للاختبار الحولي بالجامعة القرآنية إمداد العلوم فولصوا، باكيلا، حاجي غنج، صاندفور" style="direction:rtl;text-align:right;">
+      <label class="lbl">الصف</label>
+      <input class="inp" type="text" id="a-class" value="جماعة النحو والصرف" style="direction:rtl;text-align:right;">
+      <label class="lbl">المادة</label>
+      <input class="inp" type="text" id="a-subj" value="علم النحو" style="direction:rtl;text-align:right;">
+      <label class="lbl">الكتاب</label>
+      <input class="inp" type="text" id="a-kitab" value="هداية النحو" style="direction:rtl;text-align:right;">
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;"><label class="lbl">التاريخ</label><input class="inp" type="text" id="a-date" value="٤ شعبان المعظم * ٢٤ يناير" style="direction:rtl;text-align:right;"></div>
+        <div style="flex:1;"><label class="lbl">السنة</label><input class="inp" type="text" id="a-year" value="١٤٤٧/٢٠٢٦ م" style="direction:rtl;text-align:right;"></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;"><label class="lbl">الوقت</label><input class="inp" type="text" id="a-time" value="ثلاث ساعات" style="direction:rtl;text-align:right;"></div>
+        <div style="flex:1;"><label class="lbl">الدرجات</label><input class="inp" type="text" id="a-marks" value="مائة" style="direction:rtl;text-align:right;"></div>
+      </div>
+      <label class="lbl">تفصيل الدرجات</label>
+      <input class="inp" type="text" id="a-mdet" value="(الأربعة منها على حسن الكتابة وجودة الأسلوب)" style="direction:rtl;text-align:right;">
+      <label class="lbl">التعليمات</label>
+      <input class="inp" type="text" id="a-inst" value="(أجب عن ثلاث فقط)" style="direction:rtl;text-align:right;">
+    </div>
+
+    <!-- URDU HEADER -->
+    <div id="hdr-u" style="display:none;">
+      <div class="stitle">ہیڈر معلومات</div>
+      <label class="lbl">ورقہ الاسئلہ (مکمل لائن)</label>
+      <input class="inp" type="text" id="u-waraqah" value="ورقة الأسئلة للاختبار النصف السنوي بجامعہ قرآنیہ امداد العلوم پھولچھوا، باکیلا، حاجی گنج، چاندپور" style="direction:rtl;text-align:right;">
+      <label class="lbl">جماعت</label>
+      <input class="inp" type="text" id="u-class" value="" style="direction:rtl;text-align:right;">
+      <label class="lbl">مضمون</label>
+      <input class="inp" type="text" id="u-subj" value="" style="direction:rtl;text-align:right;">
+      <label class="lbl">کتاب</label>
+      <input class="inp" type="text" id="u-kitab" value="" style="direction:rtl;text-align:right;">
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;"><label class="lbl">تاریخ</label><input class="inp" type="text" id="u-date" value="" style="direction:rtl;text-align:right;"></div>
+        <div style="flex:1;"><label class="lbl">وقت</label><input class="inp" type="text" id="u-time" value="" style="direction:rtl;text-align:right;"></div>
+      </div>
+      <label class="lbl">کل نمبر</label>
+      <input class="inp" type="text" id="u-marks" value="" style="direction:rtl;text-align:right;">
+      <label class="lbl">ہدایات</label>
+      <input class="inp" type="text" id="u-inst" value="" style="direction:rtl;text-align:right;">
+    </div>
+
+    <!-- QUESTIONS -->
+    <div>
+      <div class="stitle">প্রশ্নসমূহ</div>
+      <div style="background:#eef7f1;border:1px solid #9dcfb0;border-radius:7px;padding:10px 12px;font-size:12px;color:#1a5c38;line-height:1.8;margin-bottom:10px;">
+        <b>লেখার নিয়ম:</b><br>
+        • বাংলা সাব-প্রশ্ন: <b>ক.</b> খ. গ. দিয়ে শুরু করুন<br>
+        • আরবি সাব-প্রশ্ন: <b>أ.</b> ب. ج. দিয়ে শুরু করুন<br>
+        • নম্বর লাইনের একদম শেষে লিখুন: <b>৮</b> বা <b>12</b><br>
+        • আরবিতে <b>قوله:</b> দিলে বক্স হবে<br>
+        • উর্দুতে <b>قول:</b> দিলে বক্স হবে
+      </div>
+      <div id="qlist"></div>
+      <button id="addqbtn" style="width:100%;padding:11px;border:2px dashed #c8b97a;border-radius:8px;background:white;font-family:'Noto Serif Bengali',serif;font-size:14px;font-weight:700;color:#1a5c38;cursor:pointer;">＋ নতুন প্রশ্ন যোগ করুন</button>
+    </div>
+
+    <!-- ACTIONS -->
+    <div style="border-top:2px solid #c8b97a;padding-top:12px;">
+      <button id="togglebtn" style="display:none;width:100%;padding:12px;border:none;border-radius:8px;font-family:'Noto Serif Bengali',serif;font-size:14px;font-weight:700;cursor:pointer;background:#555;color:white;margin-bottom:8px;">👁️ প্রিভিউ দেখুন / লুকান</button>
+      <button id="prevbtn" class="actbtn" style="background:#1a5c38;color:white;">🔄 প্রিভিউ আপডেট করুন</button>
+      <button id="pdfbtn" class="actbtn" style="background:#c0392b;color:white;">🖨️ PDF হিসেবে সেভ করুন</button>
+      <button id="wordbtn" class="actbtn" style="background:#1a478a;color:white;">📄 Word ফাইল ডাউনলোড করুন</button>
+    </div>
+
+  </div><!-- /formpanel -->
+
+  <!-- PREVIEW PANEL -->
+  <div id="prevpanel" style="flex:1;overflow-y:auto;background:#c0b8a8;padding:28px;display:flex;flex-direction:column;align-items:center;gap:16px;">
+    <div style="font-size:11px;color:#777;font-weight:700;letter-spacing:2px;">প্রিভিউ</div>
+    <div id="paper" class="paper a4 bangla" style="box-shadow:0 4px 24px rgba(0,0,0,.15);"></div>
+  </div>
+
+</div><!-- /mainlayout -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+var LANG = 'bangla';
+var PAGE = 'a4';
+var QList = [];
+var QCnt = 0;
+
+function gv(id) { var e=document.getElementById(id); return e?e.value:''; }
+function bn(n) { return String(n).split('').map(function(c){return'০১২৩৪৫৬৭৮৯'[+c]||c;}).join(''); }
+
+function isBanglaSubQ(line) {
+  if (!line||line.length<2) return null;
+  var labels=['ক','খ','গ','ঘ','ঙ'];
+  var f=line.charAt(0), s=line.charAt(1);
+  if (labels.indexOf(f)!==-1 && (s==='.'||s===')'||s==='।')) {
+    return {label:f+s, rest:line.slice(2).replace(/^\s+/,'')};
+  }
+  return null;
+}
+
+function isArabicSubQ(line) {
+  if (!line||line.length<2) return null;
+  var labels=['أ','ب','ج','د','ه','و','ز','ح','ط','ي'];
+  var f=line.charAt(0), s=line.charAt(1);
+  if (labels.indexOf(f)!==-1 && (s==='.'||s===':'||s===')')) {
+    return {label:f+s, rest:line.slice(2).replace(/^\s+/,'')};
+  }
+  return null;
+}
+
+function extractMark(text) {
+  var m=text.match(/\s+(\d+|[০-৯]+)\s*$/);
+  if (m) return {mark:m[1], text:text.slice(0,text.length-m[0].length).trim()};
+  return {mark:'', text:text.trim()};
+}
+
+function isQawlLine(line) {
+  return (line.slice(0,6)==='قوله:' || line.slice(0,6)==='قوله ') ||
+         (line.slice(0,5)==='قول:' || line.slice(0,5)==='قول ');
+}
+
+// ===== LANGUAGE =====
+function setLang(l) {
+  LANG=l;
+  ['b','a','u'].forEach(function(x,i){
+    var lk=['bangla','arabic','urdu'];
+    document.getElementById('btn-'+x).className='langbtn'+(lk[i]===l?' on':'');
+    document.getElementById('hdr-'+x).style.display=lk[i]===l?'':'none';
+  });
+  document.getElementById('twocolrow').style.display='';
+  renderQList(); renderPreview();
+}
+
+// ===== PAGE =====
+function setPage(p) {
+  PAGE=p;
+  ['a4','narrow','land'].forEach(function(x){
+    document.getElementById('pg-'+x).className='pagebtn'+(x===p?' on':'');
+  });
+  renderPreview();
+}
+
+// ===== SAVE Q =====
+function saveQ() {
+  QList.forEach(function(q){
+    var ta=document.getElementById('qt-'+q.id);
+    var mk=document.getElementById('qm-'+q.id);
+    if(ta) q.text=ta.value;
+    if(mk) q.marks=mk.value;
+  });
+}
+
+// ===== ADD / DEL Q =====
+function addQ() { saveQ(); QCnt++; QList.push({id:QCnt,text:'',marks:''}); renderQList(); }
+function delQ(id) { saveQ(); QList=QList.filter(function(q){return q.id!==id;}); renderQList(); }
+
+// ===== RENDER Q LIST =====
+function renderQList() {
+  saveQ();
+  var c=document.getElementById('qlist'); c.innerHTML='';
+  var rtl=LANG!=='bangla';
+  QList.forEach(function(q,i){
+    var lbl=LANG==='bangla'?'প্রশ্ন '+(i+1):LANG==='arabic'?'السؤال '+(i+1):'سوال '+(i+1);
+    var ph=rtl?'قوله: متن القول...\nأ. السؤال الأول 8\nب. السؤال الثاني 12'
+              :'এখানে প্রশ্ন লিখুন...\nক. সাব-প্রশ্ন এক ৮\nখ. সাব-প্রশ্ন দুই ১২';
+    var taStyle=rtl?'direction:rtl;text-align:right;font-family:"Noto Naskh Arabic",serif;':'';
+    var d=document.createElement('div'); d.className='qblock';
+    d.innerHTML='<div class="qhead"><span>'+lbl+'</span><button class="qdelbtn" data-id="'+q.id+'">✕</button></div>'+
+      '<div><textarea class="qta" id="qt-'+q.id+'" placeholder="'+ph+'" style="'+taStyle+'">'+q.text+'</textarea></div>'+
+      '<div class="qmrow"><span>মোট নম্বর (ঐচ্ছিক):</span><input type="text" style="width:70px;padding:4px 6px;font-size:12px;border:1px solid #c8b97a;border-radius:4px;" id="qm-'+q.id+'" value="'+q.marks+'" placeholder="৩২"></div>';
+    c.appendChild(d);
+    (function(qid){d.querySelector('.qdelbtn').addEventListener('click',function(){delQ(qid);});})(q.id);
+  });
+}
+
+// ===== BUILD BANGLA =====
+function buildBangla() {
+  var tc=document.getElementById('twocol').checked;
+  var h='';
+  h+='<div class="bism">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ</div>';
+  h+='<div class="hdr-title">জামিয়া কুরআনিয়া ইমদাদুল উলুম ফুলছোঁয়া</div>';
+  h+='<div class="hdr-addr">বাকিলা, হাজীগঞ্জ, চাঁদপুর।</div>';
+  h+='<div class="hdr-exam">'+gv('b-exam')+'</div>';
+  h+='<div class="hdr-line">'+gv('b-marhala')+' &nbsp;#&nbsp; '+gv('b-subj')+'</div>';
+  h+='<div class="hdr-line">'+gv('b-kitab')+'</div>';
+  h+='<hr class="hdr-hr">';
+  h+='<div class="hdr-line">'+gv('b-dh')+' * '+gv('b-de')+'&nbsp;&nbsp;#&nbsp;&nbsp;সময়: '+gv('b-time')+'&nbsp;&nbsp;#&nbsp;&nbsp;পূর্ণমান: '+gv('b-marks')+'</div>';
+  h+='<hr class="hdr-hr">';
+  h+='<div class="hdr-inst">('+gv('b-inst')+')</div>';
+  h+='<div class="q-area'+(tc?' twocol':'')+'>';
+  QList.forEach(function(q,idx){
+    var txt=q.text.trim(); if(!txt) return;
+    var lines=txt.split('\n');
+    var firstDone=false;
+    lines.forEach(function(line){
+      line=line.trim(); if(!line) return;
+      var sub=isBanglaSubQ(line);
+      if(!firstDone&&!sub){
+        var em=extractMark(line);
+        h+='<div class="q-main"><span class="q-main-label">প্রশ্ন: '+bn(idx+1)+' ।</span><span class="q-main-text">'+em.text+'</span><span class="q-main-mark">'+em.mark+'</span></div>';
+        firstDone=true;
+      } else if(sub){
+        var sem=extractMark(sub.rest);
+        h+='<div class="q-sub"><span class="q-sub-label">'+sub.label+'</span><span class="q-sub-text">'+sem.text+'</span><span class="q-sub-mark">'+sem.mark+'</span></div>';
+        firstDone=true;
+      } else {
+        var cem=extractMark(line);
+        h+='<div class="q-cont"><span class="q-cont-text">'+cem.text+'</span><span class="q-cont-mark">'+cem.mark+'</span></div>';
+      }
+    });
+  });
+  h+='</div>';
+  return h;
+}
+
+// ===== BUILD ARABIC =====
+function buildArabic() {
+  var AN=['الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع','الثامن','التاسع','العاشر'];
+  var h='';
+  h+='<div class="bism" style="font-size:20px;">بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</div>';
+  h+='<div class="hdr-main-line">'+gv('a-waraqah')+'</div>';
+  h+='<hr class="hdr-hr">';
+  h+='<div class="hdr-meta">الصف: '+gv('a-class')+' # المادة: '+gv('a-subj')+' # الكتاب: '+gv('a-kitab')+'</div>';
+  h+='<div class="hdr-meta">التاريخ: '+gv('a-date')+' # الوقت: '+gv('a-time')+'&nbsp; عام '+gv('a-year')+'</div>';
+  h+='<div class="hdr-meta">الدرجات: '+gv('a-marks')+' '+gv('a-mdet')+'</div>';
+  h+='<hr class="hdr-hr">';
+  h+='<div class="hdr-inst">'+gv('a-inst')+'</div>';
+  QList.forEach(function(q,idx){
+    var txt=q.text.trim(); if(!txt) return;
+    h+='<div class="q-heading">السؤال '+(AN[idx]||idx+1)+':</div>';
+    txt.split('\n').forEach(function(line){
+      line=line.trim(); if(!line) return;
+      if(isQawlLine(line)){
+        h+='<div class="qawl-box">'+line+'</div>';
+        return;
+      }
+      var sub=isArabicSubQ(line);
+      if(sub){
+        var sem=extractMark(sub.rest);
+        h+='<div class="q-sub-ar"><span class="q-sub-ar-mark">'+sem.mark+'</span><span class="q-sub-ar-text">'+sem.text+'</span><span class="q-sub-ar-label">'+sub.label+'</span></div>';
+      } else {
+        var em=extractMark(line);
+        h+='<div class="q-plain">'+em.text+(em.mark?'&nbsp;&nbsp;'+em.mark:'')+'</div>';
+      }
+    });
+  });
+  return h;
+}
+
+// ===== BUILD URDU =====
+function buildUrdu() {
+  var UN=['اوّل','دوم','سوم','چہارم','پنجم','ششم','ہفتم','ہشتم','نہم','دہم'];
+  var h='';
+  h+='<div class="bism" style="font-size:20px;">بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</div>';
+  h+='<div class="hdr-main-line">'+gv('u-waraqah')+'</div>';
+  h+='<hr class="hdr-hr">';
+  h+='<div class="hdr-meta">جماعت: '+gv('u-class')+' # مضمون: '+gv('u-subj')+' # کتاب: '+gv('u-kitab')+'</div>';
+  h+='<div class="hdr-meta">تاریخ: '+gv('u-date')+' # وقت: '+gv('u-time')+' # کل نمبر: '+gv('u-marks')+'</div>';
+  h+='<hr class="hdr-hr">';
+  h+='<div class="hdr-inst">'+gv('u-inst')+'</div>';
+  QList.forEach(function(q,idx){
+    var txt=q.text.trim(); if(!txt) return;
+    h+='<div class="q-heading">سوال '+(UN[idx]||idx+1)+':</div>';
+    txt.split('\n').forEach(function(line){
+      line=line.trim(); if(!line) return;
+      if(isQawlLine(line)){
+        h+='<div class="qawl-box">'+line+'</div>';
+        return;
+      }
+      var sub=isArabicSubQ(line);
+      if(sub){
+        var sem=extractMark(sub.rest);
+        h+='<div class="q-sub-ar"><span class="q-sub-ar-mark">'+sem.mark+'</span><span class="q-sub-ar-text">'+sem.text+'</span><span class="q-sub-ar-label">'+sub.label+'</span></div>';
+      } else {
+        var em=extractMark(line);
+        h+='<div class="q-plain">'+em.text+(em.mark?'&nbsp;&nbsp;'+em.mark:'')+'</div>';
+      }
+    });
+  });
+  return h;
+}
+
+// ===== RENDER PREVIEW =====
+function renderPreview() {
+  saveQ();
+  var paper=document.getElementById('paper');
+  var pgClass=PAGE==='a4'?'a4':PAGE==='narrow'?'narrow':'landscape';
+  paper.className='paper '+pgClass+' '+LANG;
+  paper.style.boxShadow='0 4px 24px rgba(0,0,0,.15)';
+  if(LANG==='bangla') paper.innerHTML=buildBangla();
+  else if(LANG==='arabic') paper.innerHTML=buildArabic();
+  else paper.innerHTML=buildUrdu();
+}
+
+// ===== TOAST =====
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show';
+  setTimeout(function(){t.className='toast';},2800);
+}
+
+// ===== PDF =====
+function doPDF(){
+  renderPreview();
+  setTimeout(function(){window.print(); showToast('Print → Save as PDF বেছে নিন');},300);
+}
+
+// ===== WORD =====
+async function doWord(){
+  renderPreview();
+  showToast('Word ফাইল তৈরি হচ্ছে...');
+  try{
+    var D=docx;
+    var rtl=LANG!=='bangla';
+    var ls=PAGE==='land', nw=PAGE==='narrow';
+    var tc=document.getElementById('twocol').checked;
+    var mg=nw?{top:720,right:720,bottom:720,left:720}:{top:1080,right:1080,bottom:1080,left:1080};
+    var af='Traditional Arabic',bf='Kalpurush',df=rtl?af:bf;
+    var pw=ls?16838:11906, cw=pw-mg.left-mg.right;
+
+    function mp(tx,o){
+      o=o||{};
+      return new D.Paragraph({
+        bidirectional:rtl,
+        alignment:o.al||(rtl?D.AlignmentType.RIGHT:D.AlignmentType.LEFT),
+        children:[new D.TextRun({text:tx||'',bold:o.b||false,size:o.sz||24,font:o.fn||df,rtl:rtl})],
+        spacing:{after:o.af||80}
+      });
+    }
+    function hr(){return new D.Paragraph({border:{bottom:{style:D.BorderStyle.SINGLE,size:6,color:'111111',space:1}},spacing:{after:80},children:[]});}
+
+    function sqpB(label,bodyTxt,mark){
+      var ch=[];
+      ch.push(new D.TextRun({text:label+' '+bodyTxt,font:bf,size:24}));
+      if(mark) ch.push(new D.TextRun({text:'\t'+mark,bold:true,font:bf,size:24}));
+      return new D.Paragraph({
+        tabStops:[{type:D.TabStopType.RIGHT,position:cw}],
+        children:ch,spacing:{after:60},indent:{left:360}
+      });
+    }
+    function sqpA(label,bodyTxt,mark){
+      var ch=[];
+      if(mark) ch.push(new D.TextRun({text:'\t'+mark+' ',bold:true,font:af,size:24,rtl:true}));
+      ch.push(new D.TextRun({text:bodyTxt+' '+label,font:af,size:24,rtl:true}));
+      return new D.Paragraph({
+        bidirectional:true,
+        alignment:D.AlignmentType.RIGHT,
+        tabStops:[{type:D.TabStopType.LEFT,position:200}],
+        children:ch,spacing:{after:60},indent:{right:360}
+      });
+    }
+
+    var ch=[];
+    ch.push(mp('بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ',{al:D.AlignmentType.CENTER,fn:af,sz:28,af:60}));
+
+    if(LANG==='bangla'){
+      ch.push(mp('জামিয়া কুরআনিয়া ইমদাদুল উলুম ফুলছোঁয়া',{al:D.AlignmentType.CENTER,b:true,sz:32,af:20}));
+      ch.push(mp('বাকিলা, হাজীগঞ্জ, চাঁদপুর।',{al:D.AlignmentType.CENTER,sz:22,af:20}));
+      ch.push(mp(gv('b-exam'),{al:D.AlignmentType.CENTER,b:true,sz:26,af:20}));
+      ch.push(mp(gv('b-marhala')+' # '+gv('b-subj'),{al:D.AlignmentType.CENTER,sz:22,af:15}));
+      ch.push(mp(gv('b-kitab'),{al:D.AlignmentType.CENTER,sz:22,af:20}));
+      ch.push(hr());
+      ch.push(mp(gv('b-dh')+' * '+gv('b-de')+'  #  সময়: '+gv('b-time')+'  #  পূর্ণমান: '+gv('b-marks'),{al:D.AlignmentType.CENTER,sz:22,af:20}));
+      ch.push(hr());
+      ch.push(mp('('+gv('b-inst')+')',{al:D.AlignmentType.CENTER,sz:22,af:180}));
+      QList.forEach(function(q,idx){
+        var txt=q.text.trim(); if(!txt) return;
+        var lines=txt.split('\n'), fd=false;
+        lines.forEach(function(line){
+          line=line.trim(); if(!line) return;
+          var sub=isBanglaSubQ(line);
+          if(!fd&&!sub){
+            var em=extractMark(line);
+            var c2=[new D.TextRun({text:'প্রশ্ন: '+bn(idx+1)+' । ',bold:true,font:bf,size:26}),new D.TextRun({text:em.text,font:bf,size:26})];
+            if(em.mark) c2.push(new D.TextRun({text:'\t'+em.mark,bold:true,font:bf,size:26}));
+            ch.push(new D.Paragraph({tabStops:[{type:D.TabStopType.RIGHT,position:cw}],children:c2,spacing:{after:60}}));
+            fd=true;
+          } else if(sub){
+            var sem=extractMark(sub.rest);
+            ch.push(sqpB(sub.label,sem.text,sem.mark)); fd=true;
+          } else {
+            var cem=extractMark(line);
+            ch.push(mp(cem.text,{sz:24,af:50}));
+          }
+        });
+      });
+    } else if(LANG==='arabic'){
+      var AN=['الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع'];
+      ch.push(mp(gv('a-waraqah'),{al:D.AlignmentType.CENTER,b:true,fn:af,sz:24,af:40}));
+      ch.push(hr());
+      ch.push(mp('الصف: '+gv('a-class')+' # المادة: '+gv('a-subj')+' # الكتاب: '+gv('a-kitab'),{fn:af,sz:22,af:20}));
+      ch.push(mp('التاريخ: '+gv('a-date')+' # الوقت: '+gv('a-time')+'  عام '+gv('a-year'),{fn:af,sz:22,af:20}));
+      ch.push(mp('الدرجات: '+gv('a-marks')+' '+gv('a-mdet'),{fn:af,sz:22,af:30}));
+      ch.push(hr());
+      ch.push(mp(gv('a-inst'),{al:D.AlignmentType.CENTER,fn:af,sz:22,af:180}));
+      QList.forEach(function(q,idx){
+        var txt=q.text.trim(); if(!txt) return;
+        ch.push(mp('السؤال '+(AN[idx]||idx+1)+':',{b:true,fn:af,sz:28,af:60}));
+        txt.split('\n').forEach(function(line){
+          line=line.trim(); if(!line) return;
+          if(isQawlLine(line)){
+            ch.push(new D.Paragraph({bidirectional:true,alignment:D.AlignmentType.RIGHT,children:[new D.TextRun({text:line,font:af,size:24,rtl:true})],spacing:{after:80},indent:{right:200,left:200}}));
+            return;
+          }
+          var sub=isArabicSubQ(line);
+          if(sub){var sem=extractMark(sub.rest);ch.push(sqpA(sub.label,sem.text,sem.mark));}
+          else{ch.push(mp(line,{fn:af,sz:24,af:60}));}
+        });
+      });
+    } else {
+      var UN=['اوّل','دوم','سوم','چہارم','پنجم'];
+      ch.push(mp(gv('u-waraqah'),{al:D.AlignmentType.CENTER,b:true,fn:af,sz:24,af:40}));
+      ch.push(hr());
+      ch.push(mp('جماعت: '+gv('u-class')+' # مضمون: '+gv('u-subj')+' # کتاب: '+gv('u-kitab'),{fn:af,sz:22,af:20}));
+      ch.push(mp('تاریخ: '+gv('u-date')+' # وقت: '+gv('u-time')+' # کل نمبر: '+gv('u-marks'),{fn:af,sz:22,af:30}));
+      ch.push(hr());
+      ch.push(mp(gv('u-inst'),{al:D.AlignmentType.CENTER,fn:af,sz:22,af:180}));
+      QList.forEach(function(q,idx){
+        var txt=q.text.trim(); if(!txt) return;
+        ch.push(mp('سوال '+(UN[idx]||idx+1)+':',{b:true,fn:af,sz:28,af:60}));
+        txt.split('\n').forEach(function(line){
+          line=line.trim(); if(!line) return;
+          if(isQawlLine(line)){
+            ch.push(new D.Paragraph({bidirectional:true,alignment:D.AlignmentType.RIGHT,children:[new D.TextRun({text:line,font:af,size:24,rtl:true})],spacing:{after:80},indent:{right:200,left:200}}));
+            return;
+          }
+          var sub=isArabicSubQ(line);
+          if(sub){var sem=extractMark(sub.rest);ch.push(sqpA(sub.label,sem.text,sem.mark));}
+          else{ch.push(mp(line,{fn:af,sz:24,af:60}));}
+        });
+      });
+    }
+
+    var sp={page:{size:{width:ls?16838:11906,height:ls?11906:16838,orientation:ls?D.PageOrientation.LANDSCAPE:D.PageOrientation.PORTRAIT},margin:mg}};
+    if(tc) sp.column={count:2,space:720};
+    var doc=new D.Document({sections:[{properties:sp,children:ch}]});
+    var blob=await D.Packer.toBlob(doc);
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url; a.download='prashnopotro_'+LANG+'.docx';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    showToast('✅ Word ফাইল ডাউনলোড হয়েছে!');
+  } catch(e){showToast('⚠️ ত্রুটি: '+e.message);console.error(e);}
+}
+
+// ===== BIND EVENTS =====
+document.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('btn-b').addEventListener('click',function(){setLang('bangla');});
+  document.getElementById('btn-a').addEventListener('click',function(){setLang('arabic');});
+  document.getElementById('btn-u').addEventListener('click',function(){setLang('urdu');});
+  document.getElementById('pg-a4').addEventListener('click',function(){setPage('a4');});
+  document.getElementById('pg-narrow').addEventListener('click',function(){setPage('narrow');});
+  document.getElementById('pg-land').addEventListener('click',function(){setPage('land');});
+  document.getElementById('twocol').addEventListener('change',function(){renderPreview();});
+  document.getElementById('addqbtn').addEventListener('click',function(){addQ();});
+  document.getElementById('prevbtn').addEventListener('click',function(){renderPreview();showToast('প্রিভিউ আপডেট হয়েছে ✓');});
+  document.getElementById('pdfbtn').addEventListener('click',function(){doPDF();});
+  document.getElementById('wordbtn').addEventListener('click',function(){doWord();});
+  document.getElementById('togglebtn').addEventListener('click',function(){
+    var pp=document.getElementById('prevpanel');
+    if(pp.classList.contains('open')){pp.classList.remove('open');pp.style.display='none';}
+    else{pp.classList.add('open');pp.style.display='flex';}
+  });
+  var hids=['b-exam','b-marhala','b-subj','b-kitab','b-dh','b-de','b-time','b-marks','b-inst',
+            'a-waraqah','a-class','a-subj','a-kitab','a-date','a-year','a-time','a-marks','a-mdet','a-inst',
+            'u-waraqah','u-class','u-subj','u-kitab','u-date','u-time','u-marks','u-inst'];
+  hids.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.addEventListener('input',function(){renderPreview();});
+  });
+  if(window.innerWidth<=860) document.getElementById('togglebtn').style.display='block';
+  addQ();
+  renderPreview();
+});
+</script>
+</body>
+</html>
