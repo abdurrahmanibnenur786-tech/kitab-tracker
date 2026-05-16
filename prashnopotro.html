@@ -47,7 +47,7 @@ body { font-family: 'Noto Serif Bengali', serif; }
 }
 .paper.bangla .q-main-mark {
   display: table-cell; font-weight:700; white-space:nowrap;
-  width: 32px; text-align: right; vertical-align: top; font-size:14px; padding-top:1px;
+  width: 40px; text-align: right; vertical-align: top; font-size:14px; padding-top:1px;
 }
 .paper.bangla .q-sub {
   display: table; width: 100%; margin-bottom: 4px; padding-left: 14px;
@@ -61,7 +61,7 @@ body { font-family: 'Noto Serif Bengali', serif; }
 }
 .paper.bangla .q-sub-mark {
   display: table-cell; font-weight:700; white-space:nowrap;
-  width: 32px; text-align: right; vertical-align: top; font-size:13px; padding-top:1px;
+  width: 40px; text-align: right; vertical-align: top; font-size:13px; padding-top:1px;
 }
 .paper.bangla .q-cont {
   display: table; width: 100%; margin-bottom: 3px; padding-left: 78px;
@@ -124,7 +124,7 @@ body { font-family: 'Noto Serif Bengali', serif; }
 }
 .paper.arabic .q-sub-ar-mark, .paper.urdu .q-sub-ar-mark {
   display: table-cell; font-weight:700; white-space:nowrap;
-  width: 32px; text-align: left; vertical-align: top; font-size:13px; padding-top:1px;
+  width: 40px; text-align: left; vertical-align: top; font-size:13px; padding-top:1px;
 }
 .paper.arabic .q-sub-ar-text, .paper.urdu .q-sub-ar-text {
   display: table-cell; vertical-align: top; font-size:13px; line-height:1.85;
@@ -184,7 +184,12 @@ body { font-family: 'Noto Serif Bengali', serif; }
   #mainlayout { display:block !important; }
   #prevpanel { display:block !important; background:white !important; padding:0 !important; }
   .paper { box-shadow:none !important; }
-  @page { margin: 10mm; }
+  .paper.a4 { width:100% !important; }
+  .paper.narrow { width:100% !important; padding:18mm 15mm !important; }
+  .paper.landscape { width:100% !important; padding:15mm 18mm !important; }
+  @page { margin: 0; size: A4 portrait; }
+  @page.narrow { size: A4 portrait; margin: 12mm 10mm; }
+  @page.landscape { size: A4 landscape; margin: 10mm 12mm; }
 }
 </style>
 </head>
@@ -364,8 +369,16 @@ function extractMark(text) {
 }
 
 function isQawlLine(line) {
-  return (line.slice(0,6)==='قوله:' || line.slice(0,6)==='قوله ') ||
-         (line.slice(0,5)==='قول:' || line.slice(0,5)==='قول ');
+  if (!line || line.length < 4) return false;
+  // Check for قوله or قول at start followed by : or space
+  var s = line.trim();
+  if (s.charAt(0) === '\u0642') { // ق
+    if (s.slice(0,5) === '\u0642\u0648\u0644\u0647\u003A') return true; // قوله:
+    if (s.slice(0,5) === '\u0642\u0648\u0644\u0647\u0020') return true; // قوله 
+    if (s.slice(0,4) === '\u0642\u0648\u0644\u003A') return true;  // قول:
+    if (s.slice(0,4) === '\u0642\u0648\u0644\u0020') return true;  // قول 
+  }
+  return false;
 }
 
 // ===== LANGUAGE =====
@@ -432,7 +445,6 @@ function buildBangla() {
   h+='<div class="hdr-exam">'+gv('b-exam')+'</div>';
   h+='<div class="hdr-line">'+gv('b-marhala')+' &nbsp;#&nbsp; '+gv('b-subj')+'</div>';
   h+='<div class="hdr-line">'+gv('b-kitab')+'</div>';
-  h+='<hr class="hdr-hr">';
   h+='<div class="hdr-line">'+gv('b-dh')+' * '+gv('b-de')+'&nbsp;&nbsp;#&nbsp;&nbsp;সময়: '+gv('b-time')+'&nbsp;&nbsp;#&nbsp;&nbsp;পূর্ণমান: '+gv('b-marks')+'</div>';
   h+='<hr class="hdr-hr">';
   h+='<div class="hdr-inst">('+gv('b-inst')+')</div>';
@@ -551,6 +563,20 @@ function showToast(msg){
 // ===== PDF =====
 function doPDF(){
   renderPreview();
+  // Set print page size dynamically
+  var styleId = 'print-page-style';
+  var existing = document.getElementById(styleId);
+  if (existing) existing.remove();
+  var style = document.createElement('style');
+  style.id = styleId;
+  if (PAGE === 'land') {
+    style.textContent = '@page { size: A4 landscape; margin: 10mm; }';
+  } else if (PAGE === 'narrow') {
+    style.textContent = '@page { size: A4 portrait; margin: 8mm; }';
+  } else {
+    style.textContent = '@page { size: A4 portrait; margin: 12mm; }';
+  }
+  document.head.appendChild(style);
   setTimeout(function(){window.print(); showToast('Print → Save as PDF বেছে নিন');},300);
 }
 
