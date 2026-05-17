@@ -6,7 +6,8 @@
 <title>প্রশ্নপত্র জেনারেটর</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;600;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;600;700&family=Noto+Naskh+Arabic:wght@400;600;700&family=Amiri:wght@400;700&family=Scheherazade+New:wght@400;700&family=Hind+Siliguri:wght@400;600;700&family=Tiro+Bangla:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style id="custom-font-style"></style>
 <style>
 body { font-family: 'Noto Serif Bengali', serif; }
 
@@ -16,12 +17,13 @@ body { font-family: 'Noto Serif Bengali', serif; }
   color: #111;
   position: relative;
 }
+:root { --tc-fs: 9px; --main-fs: 13.5px; }
 /* A4 Normal */
-.paper.a4 { width: 794px; min-height: 1123px; padding: 50px 60px; font-size: 13.5px; }
+.paper.a4 { width: 794px; min-height: 1123px; padding: 50px 60px; font-size: var(--main-fs); }
 /* A4 Narrow */
-.paper.narrow { width: 794px; min-height: 1123px; padding: 36px 40px; font-size: 13px; }
+.paper.narrow { width: 794px; min-height: 1123px; padding: 36px 40px; font-size: var(--main-fs); }
 /* Landscape */
-.paper.landscape { width: 1123px; min-height: 794px; padding: 40px 55px; font-size: 13px; }
+.paper.landscape { width: 1123px; min-height: 794px; padding: 40px 55px; font-size: var(--main-fs); }
 
 /* ======= BANGLA PAPER ======= */
 .paper.bangla { font-family: 'Noto Serif Bengali', serif; direction: ltr; }
@@ -36,45 +38,92 @@ body { font-family: 'Noto Serif Bengali', serif; }
 /* Bangla question rows — key: flex with tab-like right alignment */
 .paper.bangla .q-area { width: 100%; }
 .paper.bangla .q-main {
-  display: table; width: 100%; margin-bottom: 4px;
+  display: flex; width: 100%; margin-bottom: 4px; align-items: flex-start; justify-content: space-between; gap: 8px;
 }
 .paper.bangla .q-main-label {
-  display: table-cell; font-weight:700; white-space:nowrap;
-  width: 78px; vertical-align: top; font-size:14px; padding-top:1px;
+  font-weight:700; white-space:nowrap; min-width: 78px;
+  flex-shrink: 0; font-size:14px; padding-top:1px;
 }
 .paper.bangla .q-main-text {
-  display: table-cell; vertical-align: top; font-size:14px; line-height:1.85;
+  flex: 1 1 auto; font-size:14px; line-height:1.85; padding-right:8px;
 }
 .paper.bangla .q-main-mark {
-  display: table-cell; font-weight:700; white-space:nowrap;
-  width: 40px; text-align: right; vertical-align: top; font-size:14px; padding-top:1px;
+  font-weight:700; white-space:nowrap; min-width: 40px;
+  flex-shrink: 0; text-align: right; font-size:14px; padding-top:1px;
 }
 .paper.bangla .q-sub {
-  display: table; width: 100%; margin-bottom: 4px; padding-left: 14px;
+  display: flex; width: 100%; margin-bottom: 4px; padding-left: 14px;
+  align-items: flex-start; gap: 0; box-sizing: border-box;
 }
 .paper.bangla .q-sub-label {
-  display: table-cell; font-weight:700; white-space:nowrap;
-  width: 24px; vertical-align: top; font-size:13px; padding-top:1px;
+  font-weight:700; white-space:nowrap; min-width: 24px;
+  flex-shrink: 0; font-size:13px; padding-top:1px;
 }
 .paper.bangla .q-sub-text {
-  display: table-cell; vertical-align: top; font-size:13px; line-height:1.85;
+  flex: 1; font-size:13px; line-height:1.85;
 }
 .paper.bangla .q-sub-mark {
-  display: table-cell; font-weight:700; white-space:nowrap;
-  width: 40px; text-align: right; vertical-align: top; font-size:13px; padding-top:1px;
+  font-weight:700; white-space:nowrap; min-width: 40px;
+  flex-shrink: 0; text-align: right; font-size:13px; padding-top:1px; margin-left: auto;
 }
 .paper.bangla .q-cont {
-  display: table; width: 100%; margin-bottom: 3px; padding-left: 78px;
+  display: flex; width: 100%; margin-bottom: 3px; padding-left: 78px;
+  align-items: flex-start; gap: 0; box-sizing: border-box;
 }
 .paper.bangla .q-cont-text {
-  display: table-cell; vertical-align: top; font-size:14px; line-height:1.85;
+  flex: 1; font-size:14px; line-height:1.85;
 }
 .paper.bangla .q-cont-mark {
-  display: table-cell; font-weight:700; white-space:nowrap;
-  width: 32px; text-align: right; vertical-align: top; font-size:14px;
+  font-weight:700; white-space:nowrap; min-width: 40px;
+  flex-shrink: 0; text-align: right; font-size:14px; margin-left: auto;
 }
-/* Two column */
+/* Two column — questions area only */
+/* Two-column font size controlled by CSS variable */
+:root { --tc-fs: 9px; }
 .paper.bangla .twocol { column-count:2; column-gap:36px; }
+/* Two-column FULL PAGE layout */
+.twocol-wrapper {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  gap: 0;
+}
+.twocol-wrapper .col-half {
+  flex: 1;
+  min-width: 0;
+  padding: 0 8px;
+  border-right: 1.5px solid #555;
+  box-sizing: border-box;
+  font-size: var(--tc-fs);
+  overflow: hidden;
+}
+.twocol-wrapper * { word-break: break-word; overflow-wrap: break-word; }
+.twocol-wrapper .col-half:last-child { border-right: none; }
+.twocol-wrapper .col-half .hdr-title  { font-size: calc(var(--tc-fs) + 3px); margin-bottom:1px; }
+.twocol-wrapper .col-half .hdr-addr   { font-size: var(--tc-fs); margin-bottom:1px; }
+.twocol-wrapper .col-half .hdr-exam   { font-size: var(--tc-fs); margin-bottom:1px; }
+.twocol-wrapper .col-half .hdr-line   { font-size: var(--tc-fs); margin-bottom:1px; }
+.twocol-wrapper .col-half .hdr-inst   { font-size: var(--tc-fs); margin:3px 0 6px; }
+.twocol-wrapper .col-half .hdr-main-line { font-size: calc(var(--tc-fs) + 1px); }
+.twocol-wrapper .col-half .hdr-meta   { font-size: var(--tc-fs); }
+.twocol-wrapper .col-half .hdr-hr     { margin: 3px 0; }
+.twocol-wrapper .col-half .q-heading  { font-size: calc(var(--tc-fs) + 1px); margin-top:5px; margin-bottom:2px; }
+.twocol-wrapper .col-half .q-main     { font-size: var(--tc-fs); margin-bottom:2px; }
+.twocol-wrapper .col-half .q-main-label { font-size:var(--tc-fs); min-width:38px; }
+.twocol-wrapper .col-half .q-main-text  { font-size:var(--tc-fs); line-height:1.55; }
+.twocol-wrapper .col-half .q-main-mark  { font-size:var(--tc-fs); min-width:22px; }
+.twocol-wrapper .col-half .q-sub      { font-size: var(--tc-fs); margin-bottom:2px; }
+.twocol-wrapper .col-half .q-sub-label { font-size:var(--tc-fs); }
+.twocol-wrapper .col-half .q-sub-text  { font-size:var(--tc-fs); line-height:1.55; }
+.twocol-wrapper .col-half .q-sub-mark  { font-size:var(--tc-fs); }
+.twocol-wrapper .col-half .q-cont     { padding-left:38px; margin-bottom:2px; }
+.twocol-wrapper .col-half .q-cont-text { font-size:var(--tc-fs); line-height:1.55; }
+.twocol-wrapper .col-half .q-sub-ar   { font-size: var(--tc-fs); margin-bottom:2px; }
+.twocol-wrapper .col-half .q-sub-ar-text  { font-size:var(--tc-fs); line-height:1.55; }
+.twocol-wrapper .col-half .q-sub-ar-mark  { font-size:var(--tc-fs); }
+.twocol-wrapper .col-half .q-sub-ar-label { font-size:var(--tc-fs); }
+.twocol-wrapper .col-half .bism       { font-size: calc(var(--tc-fs) + 2px); margin-bottom:2px; }
+.twocol-wrapper .col-half .qawl-box   { font-size: var(--tc-fs); padding: 2px 5px; }
 
 /* ======= ARABIC / URDU PAPER ======= */
 .paper.arabic, .paper.urdu {
@@ -106,32 +155,62 @@ body { font-family: 'Noto Serif Bengali', serif; }
 
 /* Arabic/Urdu question heading */
 .paper.arabic .q-heading, .paper.urdu .q-heading {
-  font-weight:700; font-size:15px; margin-top:12px; margin-bottom:5px;
+  font-weight:700; font-size:16px; margin-top:15px; margin-bottom:8px;
   font-family:'Noto Naskh Arabic',serif;
+  text-align: right !important;
+  width: 100%;
 }
 /* قوله / مصنف کا قول box */
 .paper.arabic .qawl-box, .paper.urdu .qawl-box {
   font-size:13px; line-height:1.9; margin-bottom:7px;
   padding: 5px 10px 5px 8px;
   background:#f9f7f2;
-  border-left: 3px solid #b8860b;
   font-family:'Noto Naskh Arabic',serif;
+}
+/* Arabic/Urdu layout fixes */
+.paper.urdu, .paper.arabic {
+  direction: rtl;
+  text-align: right;
+}
+.paper.urdu .hdr-main-line, .paper.urdu .hdr-meta, .paper.urdu .hdr-inst,
+.paper.arabic .hdr-main-line, .paper.arabic .hdr-meta, .paper.arabic .hdr-inst {
+  text-align: center !important;
+  width: 100%;
 }
 /* Arabic sub-question row — mark on LEFT, label on RIGHT */
 .paper.arabic .q-sub-ar, .paper.urdu .q-sub-ar {
-  display: table; width: 100%; margin-bottom: 4px;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  margin-bottom: 6px;
+  align-items: flex-start;
   font-family:'Noto Naskh Arabic',serif;
 }
 .paper.arabic .q-sub-ar-mark, .paper.urdu .q-sub-ar-mark {
-  display: table-cell; font-weight:700; white-space:nowrap;
-  width: 40px; text-align: left; vertical-align: top; font-size:13px; padding-top:1px;
+  font-weight: 700;
+  white-space: nowrap;
+  min-width: 40px;
+  flex-shrink: 0;
+  text-align: left;
+  font-size: 14px;
+  direction: ltr;
+  margin-right: auto; /* RTL flexbox-এ একদম বাম প্রান্তে ঠেলে দেবে */
 }
 .paper.arabic .q-sub-ar-text, .paper.urdu .q-sub-ar-text {
-  display: table-cell; vertical-align: top; font-size:13px; line-height:1.85;
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.85;
+  padding-left: 15px;
+  padding-right: 5px;
+  text-align: right;
 }
 .paper.arabic .q-sub-ar-label, .paper.urdu .q-sub-ar-label {
-  display: table-cell; font-weight:700; white-space:nowrap;
-  width: 24px; text-align: right; vertical-align: top; font-size:13px; padding-top:1px;
+  font-weight: 700;
+  white-space: nowrap;
+  min-width: 25px;
+  flex-shrink: 0;
+  text-align: right;
+  font-size: 14px;
 }
 /* plain arabic line */
 .paper.arabic .q-plain, .paper.urdu .q-plain {
@@ -183,21 +262,102 @@ body { font-family: 'Noto Serif Bengali', serif; }
   #topbar, #formpanel { display:none !important; }
   #mainlayout { display:block !important; }
   #prevpanel { display:block !important; background:white !important; padding:0 !important; }
-  .paper { box-shadow:none !important; }
+  .paper { box-shadow:none !important; margin:0 auto !important; }
   .paper.a4 { width:100% !important; }
   .paper.narrow { width:100% !important; padding:18mm 15mm !important; }
-  .paper.landscape { width:100% !important; padding:15mm 18mm !important; }
-  @page { margin: 0; size: A4 portrait; }
-  @page.narrow { size: A4 portrait; margin: 12mm 10mm; }
-  @page.landscape { size: A4 landscape; margin: 10mm 12mm; }
+  .paper.landscape { width:100% !important; padding:12mm 15mm !important; }
+  .no-print { display:none !important; }
+  /* Two-column landscape print fix */
+  .twocol-wrapper { display:flex !important; flex-direction:row !important; width:100% !important; gap:0 !important; }
+  .twocol-wrapper .col-half { flex:1 !important; padding:0 10mm !important; border-right:1px solid #555 !important; }
+  .twocol-wrapper .col-half:last-child { border-right:none !important; }
+  @page { margin:8mm; }
+  @page :landscape { size:A4 landscape; margin:8mm; }
 }
+
+/* Urdu section fixes */
+[dir="rtl"] .urdu-mode, .urdu, :lang(ur), :lang(ar) {
+    text-align: center !important;
+}
+[dir="rtl"] .urdu-mode .header, .urdu .header, :lang(ur) .header, :lang(ar) .header {
+    text-align: center !important;
+    margin-left: auto;
+    margin-right: auto;
+}
+[dir="rtl"] .degree-line {
+    text-align: center !important;
+    border-top: none !important;
+    margin-bottom: 5px;
+}
+[dir="rtl"] .separator-middle {
+    display: none !important;
+}
+[dir="rtl"] .question-number {
+    float: left !important;
+    text-align: left !important;
+    display: block;
+    width: auto;
+    margin-left: 0;
+    margin-right: auto;
+}
+[dir="rtl"] .question-item {
+    position: relative;
+    padding-left: 40px;
+}
+[dir="rtl"] .question-item .marks {
+    position: absolute;
+    left: 0;
+    top: 0;
+    direction: ltr;
+    text-align: left;
+}
+
+/* ======= LIBRARY MODAL ======= */
+#lib-overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,.55);
+  z-index:1000; align-items:center; justify-content:center;
+}
+#lib-overlay.open { display:flex; }
+#lib-box {
+  background:#fff9f0; border-radius:12px; width:96vw; max-width:600px;
+  max-height:90vh; display:flex; flex-direction:column;
+  box-shadow:0 8px 40px rgba(0,0,0,.3); overflow:hidden;
+}
+#lib-header {
+  background:#1a5c38; color:white; padding:12px 16px;
+  display:flex; justify-content:space-between; align-items:center;
+  font-weight:700; font-size:15px; flex-shrink:0;
+}
+#lib-body { flex:1; overflow-y:auto; padding:14px; }
+#lib-tabs { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+.lib-tab { padding:6px 14px; border:2px solid #c8b97a; border-radius:20px;
+  background:white; font-size:12px; font-weight:700; color:#555; cursor:pointer; }
+.lib-tab.on { background:#1a5c38; color:white; border-color:#1a5c38; }
+#lib-search { width:100%; padding:7px 10px; border:1.5px solid #c8b97a;
+  border-radius:6px; font-size:13px; margin-bottom:10px; box-sizing:border-box; }
+.lib-item {
+  border:1.5px solid #c8b97a; border-radius:8px; padding:9px 11px;
+  margin-bottom:7px; background:white;
+  display:flex; justify-content:space-between; align-items:flex-start; gap:8px;
+}
+.lib-item-text { flex:1; font-size:12px; line-height:1.7; color:#222; }
+.lib-item-meta { font-size:10px; color:#888; margin-top:3px; }
+.lib-item-btns { display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
+.lib-use-btn { padding:5px 10px; background:#1a5c38; color:white;
+  border:none; border-radius:5px; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; }
+.lib-del-btn { padding:5px 10px; background:#c0392b; color:white;
+  border:none; border-radius:5px; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; }
+#lib-save-area { border-top:2px solid #c8b97a; padding:12px 14px; flex-shrink:0; background:#f9f5ec; }
 </style>
 </head>
 <body class="bg-gray-300 min-h-screen">
 
-<div id="topbar" style="background:#1a5c38;color:white;padding:12px 18px;">
-  <div style="font-size:18px;font-weight:700;">📄 প্রশ্নপত্র জেনারেটর</div>
-  <div style="font-size:11px;opacity:.8;">জামিয়া কুরআনিয়া ইমদাদুল উলুম ফুলছোঁয়া</div>
+<div id="topbar" style="background:#1a5c38;color:white;padding:10px 18px;display:flex;align-items:center;justify-content:space-between;">
+  <div>
+    <div style="font-size:18px;font-weight:700;">📄 প্রশ্নপত্র জেনারেটর</div>
+    <div style="font-size:11px;opacity:.8;">জামিয়া কুরআনিয়া ইমদাদুল উলুম ফুলছোঁয়া</div>
+  </div>
+  <button id="topbar-libbtn" onclick="libOpen()" style="background:#6a0dad;color:white;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Serif Bengali',serif;">📚 প্রশ্ন লাইব্রেরি</button>
 </div>
 
 <div id="mainlayout" style="display:flex;min-height:calc(100vh - 54px);">
@@ -227,11 +387,26 @@ body { font-family: 'Noto Serif Bengali', serif; }
         <input type="checkbox" id="twocol" style="width:18px;height:18px;"> দুই কলামে সাজান
       </label>
       <div style="font-size:11px;color:#999;font-style:italic;margin-top:3px;">Narrow বা Landscape + দুই কলাম = একই পেজে দুইবার প্রশ্ন</div>
+      <!-- দুই কলাম ফন্ট স্লাইডার -->
+      <div id="twocol-size-row" style="display:none;background:#eef7f1;border:1px solid #9dcfb0;border-radius:7px;padding:8px 10px;margin-top:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-size:12px;font-weight:700;color:#1a5c38;">🔡 দুই কলামের লেখার সাইজ</span>
+          <span id="twocol-size-val" style="font-size:13px;font-weight:700;color:#c0392b;">9px</span>
+        </div>
+        <input type="range" id="twocol-size-slider" min="6" max="13" step="0.5" value="9"
+          style="width:100%;accent-color:#1a5c38;cursor:pointer;">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#999;margin-top:1px;">
+          <span>ছোট (6px)</span>
+          <span>বড় (13px)</span>
+        </div>
+      </div>
     </div>
 
     <!-- BANGLA HEADER -->
     <div id="hdr-b">
       <div class="stitle">হেডার তথ্য</div>
+      <label class="lbl">মাদ্রাসার নাম</label>
+      <input class="inp" type="text" id="b-madrasah" value="জামিয়া কুরআনিয়া ইমদাদুল উলুম ফুলছোঁয়া">
       <label class="lbl">পরীক্ষার নাম</label>
       <input class="inp" type="text" id="b-exam" value="দ্বিতীয় সামিয়ক পরীক্ষা ১৪৪৭ হি. / ২০২৫ ঈ.">
       <label class="lbl">মারহালা / শ্রেণি</label>
@@ -298,6 +473,42 @@ body { font-family: 'Noto Serif Bengali', serif; }
       <input class="inp" type="text" id="u-inst" value="" style="direction:rtl;text-align:right;">
     </div>
 
+    <!-- FONT SELECTOR -->
+    <div id="font-section">
+      <div class="stitle">ফন্ট নির্বাচন</div>
+      <div id="font-bangla-row">
+        <label class="lbl">বাংলা ফন্ট</label>
+        <select class="inp" id="font-bangla" style="cursor:pointer;">
+          <option value="Noto Serif Bengali">Noto Serif Bengali (ডিফল্ট)</option>
+          <option value="Hind Siliguri">Hind Siliguri</option>
+          <option value="Tiro Bangla">Tiro Bangla</option>
+          <option value="custom-bangla">📁 নিজের ফন্ট আপলোড...</option>
+        </select>
+        <input type="file" id="font-bangla-file" accept=".ttf,.otf,.woff,.woff2" style="display:none;">
+      </div>
+      <div id="font-arabic-row">
+        <label class="lbl">আরবি ফন্ট</label>
+        <select class="inp" id="font-arabic" style="cursor:pointer;">
+          <option value="Noto Naskh Arabic">Noto Naskh Arabic (ডিফল্ট)</option>
+          <option value="Amiri">Amiri</option>
+          <option value="Scheherazade New">Scheherazade New</option>
+          <option value="custom-arabic">📁 নিজের ফন্ট আপলোড (Traditional Arabic / Arabic Typesetting)...</option>
+        </select>
+        <input type="file" id="font-arabic-file" accept=".ttf,.otf,.woff,.woff2" style="display:none;">
+        <div id="font-arabic-name" style="font-size:11px;color:#1a5c38;margin-top:2px;display:none;"></div>
+      </div>
+      <div id="font-urdu-row">
+        <label class="lbl">উর্দু ফন্ট</label>
+        <select class="inp" id="font-urdu" style="cursor:pointer;">
+          <option value="Noto Naskh Arabic">Noto Naskh Arabic (ডিফল্ট)</option>
+          <option value="Amiri">Amiri</option>
+          <option value="custom-urdu">📁 নিজের ফন্ট আপলোড (Jameel Noori / Alvi Nastaleeq)...</option>
+        </select>
+        <input type="file" id="font-urdu-file" accept=".ttf,.otf,.woff,.woff2" style="display:none;">
+        <div id="font-urdu-name" style="font-size:11px;color:#1a5c38;margin-top:2px;display:none;"></div>
+      </div>
+    </div>
+
     <!-- QUESTIONS -->
     <div>
       <div class="stitle">প্রশ্নসমূহ</div>
@@ -310,11 +521,37 @@ body { font-family: 'Noto Serif Bengali', serif; }
         • উর্দুতে <b>قول:</b> দিলে বক্স হবে
       </div>
       <div id="qlist"></div>
-      <button id="addqbtn" style="width:100%;padding:11px;border:2px dashed #c8b97a;border-radius:8px;background:white;font-family:'Noto Serif Bengali',serif;font-size:14px;font-weight:700;color:#1a5c38;cursor:pointer;">＋ নতুন প্রশ্ন যোগ করুন</button>
+      <button id="addqbtn" style="width:100%;padding:9px;border:2px dashed #c8b97a;border-radius:8px;background:white;font-family:'Noto Serif Bengali',serif;font-size:13px;font-weight:700;color:#1a5c38;cursor:pointer;margin-top:4px;">＋ আরেকটি প্রশ্নের বক্স যোগ করুন</button>
     </div>
 
     <!-- ACTIONS -->
     <div style="border-top:2px solid #c8b97a;padding-top:12px;">
+      <!-- সাধারণ ফন্ট সাইজ স্লাইডার -->
+      <div style="background:#f9f5ec;border:1px solid #c8b97a;border-radius:7px;padding:8px 10px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-size:12px;font-weight:700;color:#555;">🔡 লেখার সাইজ</span>
+          <span id="main-size-val" style="font-size:13px;font-weight:700;color:#c0392b;">13.5px</span>
+        </div>
+        <input type="range" id="main-size-slider" min="8" max="16" step="0.5" value="13.5"
+          style="width:100%;accent-color:#1a5c38;cursor:pointer;">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#999;margin-top:1px;">
+          <span>ছোট (8px)</span>
+          <span>বড় (16px)</span>
+        </div>
+      </div>
+      <!-- লাইন স্পেসিং স্লাইডার -->
+      <div style="background:#f9f5ec;border:1px solid #c8b97a;border-radius:7px;padding:8px 10px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-size:12px;font-weight:700;color:#555;">↕️ লাইনের ফাঁকা জায়গা</span>
+          <span id="space-zoom-val" style="font-size:13px;font-weight:700;color:#c0392b;">১.০০x</span>
+        </div>
+        <input type="range" id="space-zoom-slider" min="0.6" max="1.2" step="0.05" value="1.0"
+          style="width:100%;accent-color:#1a5c38;cursor:pointer;">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#999;margin-top:1px;">
+          <span>কম (০.৬x)</span>
+          <span>বেশি (১.২x)</span>
+        </div>
+      </div>
       <button id="togglebtn" style="display:none;width:100%;padding:12px;border:none;border-radius:8px;font-family:'Noto Serif Bengali',serif;font-size:14px;font-weight:700;cursor:pointer;background:#555;color:white;margin-bottom:8px;">👁️ প্রিভিউ দেখুন / লুকান</button>
       <button id="prevbtn" class="actbtn" style="background:#1a5c38;color:white;">🔄 প্রিভিউ আপডেট করুন</button>
       <button id="pdfbtn" class="actbtn" style="background:#c0392b;color:white;">🖨️ PDF হিসেবে সেভ করুন</button>
@@ -324,20 +561,132 @@ body { font-family: 'Noto Serif Bengali', serif; }
   </div><!-- /formpanel -->
 
   <!-- PREVIEW PANEL -->
-  <div id="prevpanel" style="flex:1;overflow-y:auto;background:#c0b8a8;padding:28px;display:flex;flex-direction:column;align-items:center;gap:16px;">
-    <div style="font-size:11px;color:#777;font-weight:700;letter-spacing:2px;">প্রিভিউ</div>
-    <div id="paper" class="paper a4 bangla" style="box-shadow:0 4px 24px rgba(0,0,0,.15);"></div>
+  <div id="prevpanel" style="flex:1;overflow:auto;background:#c0b8a8;padding:20px 28px;display:flex;flex-direction:column;align-items:center;gap:10px;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;" class="no-print">
+      <div style="font-size:11px;color:#777;font-weight:700;letter-spacing:2px;">প্রিভিউ</div>
+      <div style="background:white;border-radius:8px;padding:5px 10px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#333;">
+        <span>🔍 জুম:</span>
+        <button onclick="changePreviewZoom(-10)" style="background:#eee;border:none;border-radius:4px;width:26px;height:26px;font-size:16px;cursor:pointer;font-weight:700;">−</button>
+        <span id="preview-zoom-val" style="min-width:38px;text-align:center;color:#1a5c38;">৬০%</span>
+        <button onclick="changePreviewZoom(10)" style="background:#eee;border:none;border-radius:4px;width:26px;height:26px;font-size:16px;cursor:pointer;font-weight:700;">+</button>
+        <button onclick="setPreviewZoom(60)" style="background:#c8b97a;border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;font-weight:700;color:#333;">রিসেট</button>
+      </div>
+
+    </div>
+    <div id="paper-scaler" style="transform-origin:top center;">
+      <div id="paper" class="paper a4 bangla" style="box-shadow:0 4px 24px rgba(0,0,0,.15);"></div>
+    </div>
   </div>
 
 </div><!-- /mainlayout -->
 
 <div class="toast" id="toast"></div>
 
+<!-- LIBRARY MODAL -->
+<div id="lib-overlay">
+  <div id="lib-box">
+    <div id="lib-header">
+      <span>📚 প্রশ্ন লাইব্রেরি</span>
+      <button id="lib-close" style="background:none;border:none;color:white;font-size:22px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+    <div id="lib-body">
+      <!-- Tabs: বিষয় filter -->
+      <div id="lib-tabs">
+        <button class="lib-tab on" data-subj="সব">সব</button>
+      </div>
+      <input id="lib-search" placeholder="🔍 প্রশ্ন খুঁজুন..." type="text">
+      <div id="lib-list"></div>
+    </div>
+    <!-- Save current questions to library -->
+    <div id="lib-save-area">
+      <div class="stitle">📥 বর্তমান প্রশ্নগুলো লাইব্রেরিতে সেভ করুন</div>
+      <div style="display:flex;gap:6px;margin-bottom:6px;">
+        <input id="lib-subj-inp" class="inp" style="margin:0;flex:1;" placeholder="বিষয় লিখুন (যেমন: নাহু, ফিকহ, দ্বীনিয়াত)">
+        <button id="lib-save-btn" style="padding:7px 14px;background:#1a5c38;color:white;border:none;border-radius:7px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;">সেভ করুন</button>
+      </div>
+      <div style="font-size:11px;color:#888;margin-bottom:10px;">প্রতিটি প্রশ্ন আলাদাভাবে সেভ হবে — পরে যেকোনো প্রশ্নপত্রে ব্যবহার করতে পারবেন।</div>
+      <!-- টেলিগ্রাম ব্যাকআপ -->
+      <div style="border-top:1px solid #c8b97a;padding-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+        <button onclick="libSaveToTelegram()" style="flex:1;padding:7px 10px;background:#0088cc;color:white;border:none;border-radius:7px;font-weight:700;font-size:12px;cursor:pointer;">💾 টেলিগ্রামে ব্যাকআপ</button>
+        <label style="flex:1;padding:7px 10px;background:#b8860b;color:white;border:none;border-radius:7px;font-weight:700;font-size:12px;cursor:pointer;text-align:center;">
+          📂 ফাইল থেকে ইমপোর্ট
+          <input type="file" accept=".json" onchange="libImportFromFile(this.files[0])" style="display:none;">
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 var LANG = 'bangla';
 var PAGE = 'a4';
 var QList = [];
 var QCnt = 0;
+var CUSTOM_FONTS = { bangla: null, arabic: null, urdu: null };
+var currentSpaceZoom = 1.0;
+var TG_TOKEN = '8648783165:AAHFbYOAwBkBBYbJUVUxnpGi12lLj_sO9I4';
+var TG_CHAT  = '8076987406';
+var FONT_SCALE = 100; // percentage
+
+function applyFontScale(scale) {
+  FONT_SCALE = scale;
+  document.getElementById('fontsize-val').textContent = scale + '%';
+  document.getElementById('fontsize-slider').value = scale;
+  var paper = document.getElementById('paper');
+  // Base sizes per page type
+  var baseSize = PAGE === 'a4' ? 13.5 : 13;
+  paper.style.fontSize = (baseSize * scale / 100).toFixed(2) + 'px';
+}
+
+function fitToOnePage() {
+  var paper = document.getElementById('paper');
+  var maxH = PAGE === 'landscape' ? 794 : 1123;
+  // Remove min-height constraint temporarily to measure real height
+  paper.style.minHeight = '0';
+  var scale = FONT_SCALE;
+  // Step down until content fits
+  for (var s = scale; s >= 60; s -= 2) {
+    applyFontScale(s);
+    if (paper.scrollHeight <= maxH) break;
+  }
+  // Restore min-height
+  paper.style.minHeight = '';
+  showToast('📐 ' + FONT_SCALE + '% সাইজে এক পেইজে ফিট হয়েছে!');
+}
+
+var PREVIEW_ZOOM = 60;
+
+function setPreviewZoom(z) {
+  PREVIEW_ZOOM = Math.max(20, Math.min(100, z));
+  var scaler = document.getElementById('paper-scaler');
+  if (scaler) scaler.style.transform = 'scale(' + (PREVIEW_ZOOM/100) + ')';
+  document.getElementById('preview-zoom-val').textContent = bn(PREVIEW_ZOOM) + '%';
+}
+
+function changePreviewZoom(delta) {
+  setPreviewZoom(PREVIEW_ZOOM + delta);
+}
+
+function applyZoomStyles() {
+  var paper = document.getElementById('paper');
+  if (!paper) return;
+  var baseLineHeight = 1.85;
+  var baseMargin = 4;
+  var newLineHeight = (baseLineHeight * currentSpaceZoom);
+  var newMargin = (baseMargin * currentSpaceZoom) + 'px';
+  var selector = '#paper .q-main, #paper .q-sub, #paper .q-sub-ar, #paper .q-plain, #paper .q-cont, #paper .qawl-box, #paper .q-heading';
+  var elements = paper.querySelectorAll(selector);
+  elements.forEach(function(el) {
+    el.style.lineHeight = newLineHeight;
+    el.style.marginBottom = newMargin;
+    el.style.marginTop = newMargin;
+  });
+  // text elements ভেতরে
+  var textSelector = '#paper .q-main-text, #paper .q-sub-text, #paper .q-cont-text, #paper .q-sub-ar-text';
+  paper.querySelectorAll(textSelector).forEach(function(el) {
+    el.style.lineHeight = newLineHeight;
+  });
+}
 
 function gv(id) { var e=document.getElementById(id); return e?e.value:''; }
 function bn(n) { return String(n).split('').map(function(c){return'০১২৩৪৫৬৭৮৯'[+c]||c;}).join(''); }
@@ -363,7 +712,8 @@ function isArabicSubQ(line) {
 }
 
 function extractMark(text) {
-  var m=text.match(/\s+(\d+|[০-৯]+)\s*$/);
+  // matches English digits, Bengali digits (০-৯), Arabic-Indic digits (٠-٩), Extended Arabic-Indic (۰-۹)
+  var m=text.match(/\s+([\d\u0660-\u0669\u06F0-\u06F9\u09E6-\u09EF]+)\s*$/);
   if (m) return {mark:m[1], text:text.slice(0,text.length-m[0].length).trim()};
   return {mark:'', text:text.trim()};
 }
@@ -406,9 +756,7 @@ function setPage(p) {
 function saveQ() {
   QList.forEach(function(q){
     var ta=document.getElementById('qt-'+q.id);
-    var mk=document.getElementById('qm-'+q.id);
     if(ta) q.text=ta.value;
-    if(mk) q.marks=mk.value;
   });
 }
 
@@ -428,46 +776,151 @@ function renderQList() {
     var taStyle=rtl?'direction:rtl;text-align:right;font-family:"Noto Naskh Arabic",serif;':'';
     var d=document.createElement('div'); d.className='qblock';
     d.innerHTML='<div class="qhead"><span>'+lbl+'</span><button class="qdelbtn" data-id="'+q.id+'">✕</button></div>'+
-      '<div><textarea class="qta" id="qt-'+q.id+'" placeholder="'+ph+'" style="'+taStyle+'">'+q.text+'</textarea></div>'+
-      '<div class="qmrow"><span>মোট নম্বর (ঐচ্ছিক):</span><input type="text" style="width:70px;padding:4px 6px;font-size:12px;border:1px solid #c8b97a;border-radius:4px;" id="qm-'+q.id+'" value="'+q.marks+'" placeholder="৩২"></div>';
+      '<div>'+
+        '<textarea class="qta" id="qt-'+q.id+'" placeholder="'+ph+'" style="'+taStyle+'">'+q.text+'</textarea>'+
+      '</div>'+
+      '<div style="background:#f0ece0;border:1px solid #c8b97a;border-top:none;border-radius:0 0 6px 6px;padding:5px 8px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;" id="aln-bar-'+q.id+'">'+
+        '<button data-qid="'+q.id+'" data-act="undo" class="act-btn" style="padding:3px 9px;background:#eee;border:1px solid #aaa;border-radius:4px;font-size:12px;cursor:pointer;color:#555;" title="Undo">↩ আন্ডু</button>'+
+        '<button data-qid="'+q.id+'" data-act="redo" class="act-btn" style="padding:3px 9px;background:#eee;border:1px solid #aaa;border-radius:4px;font-size:12px;cursor:pointer;color:#555;" title="Redo">↪ রিডু</button>'+
+        '<span style="font-size:11px;color:#bbb;margin:0 2px;">|</span>'+
+        '<span style="font-size:10px;color:#999;align-self:center;">লাইন:</span>'+
+        '<button data-qid="'+q.id+'" data-aln="right" class="aln-btn" style="padding:3px 9px;background:#eee;border:1px solid #c8b97a;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;color:#333;">ডানে ◀</button>'+
+        '<button data-qid="'+q.id+'" data-aln="center" class="aln-btn" style="padding:3px 9px;background:#eee;border:1px solid #c8b97a;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;color:#333;">▬ মাঝে</button>'+
+        '<button data-qid="'+q.id+'" data-aln="left" class="aln-btn" style="padding:3px 9px;background:#eee;border:1px solid #c8b97a;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;color:#333;">▶ বামে</button>'+
+      '</div>';
     c.appendChild(d);
-    (function(qid){d.querySelector('.qdelbtn').addEventListener('click',function(){delQ(qid);});})(q.id);
+    (function(qid){
+      d.querySelector('.qdelbtn').addEventListener('click',function(){delQ(qid);});
+      // Undo / Redo
+      d.querySelectorAll('.act-btn').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var ta = document.getElementById('qt-'+qid);
+          ta.focus();
+          var act = btn.getAttribute('data-act');
+          document.execCommand(act === 'undo' ? 'undo' : 'redo');
+          saveQ(); renderPreview();
+        });
+      });
+      // Alignment buttons — insert marker at current line
+      d.querySelectorAll('.aln-btn').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var ta = document.getElementById('qt-'+qid);
+          var start = ta.selectionStart;
+          var val = ta.value;
+          // Find start and end of current line
+          var lineStart = val.lastIndexOf('\n', start-1) + 1;
+          var lineEnd = val.indexOf('\n', start);
+          if (lineEnd === -1) lineEnd = val.length;
+          var line = val.slice(lineStart, lineEnd);
+          // Remove existing alignment markers
+          line = line.replace(/^(→مركز→|→يسار→|→يمين→|→center→|→left→|→right→)/, '');
+          var aln = btn.getAttribute('data-aln');
+          // Only add marker for non-default alignments
+          var isRtl = LANG !== 'bangla';
+          var defaultAln = isRtl ? 'right' : 'left';
+          var marker = '';
+          if (aln !== defaultAln) {
+            marker = aln === 'center' ? '→center→' : (aln === 'left' ? '→left→' : '→right→');
+          }
+          var newLine = marker + line;
+          ta.value = val.slice(0, lineStart) + newLine + val.slice(lineEnd);
+          ta.selectionStart = ta.selectionEnd = lineStart + newLine.length;
+          ta.focus();
+          // Highlight active button
+          d.querySelectorAll('.aln-btn').forEach(function(b){ b.style.background='#eee'; b.style.color='#333'; });
+          btn.style.background = '#1a5c38'; btn.style.color = 'white';
+          saveQ(); renderPreview();
+        });
+      });
+    })(q.id);
   });
+}
+
+// ===== SPLIT Q BY BLANK LINE =====
+function splitQ(id) {
+  saveQ();
+  var idx = QList.findIndex(function(q){ return q.id === id; });
+  if (idx === -1) return;
+  var txt = QList[idx].text;
+  // Split by one or more blank lines
+  var parts = txt.split(/\n\s*\n/).map(function(p){ return p.trim(); }).filter(function(p){ return p; });
+  if (parts.length <= 1) { showToast('⚠️ খালি লাইন পাওয়া যায়নি — ভাগ হয়নি'); return; }
+  // Replace current question with first part, insert rest after
+  QList[idx].text = parts[0];
+  var newQs = parts.slice(1).map(function(p){
+    QCnt++;
+    return { id: QCnt, text: p, marks: '' };
+  });
+  QList.splice.apply(QList, [idx+1, 0].concat(newQs));
+  renderQList();
+  renderPreview();
+  showToast('✅ ' + parts.length + 'টি প্রশ্নে ভাগ হয়েছে');
+}
+
+// ===== ALIGNMENT MARKER HELPER =====
+function parseLineAlign(line) {
+  var aln = null;
+  var m = line.match(/^→(center|left|right)→/);
+  if (m) { aln = m[1]; line = line.slice(m[0].length); }
+  return { line: line, aln: aln };
+}
+
+function alnStyle(aln, defaultAln) {
+  if (!aln || aln === defaultAln) return '';
+  if (aln === 'center') return 'text-align:center;justify-content:center;';
+  if (aln === 'left') return 'text-align:left;justify-content:flex-end;';
+  return 'text-align:right;justify-content:flex-start;';
 }
 
 // ===== BUILD BANGLA =====
 function buildBangla() {
-  var tc=document.getElementById('twocol').checked;
   var h='';
   h+='<div class="bism">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ</div>';
-  h+='<div class="hdr-title">জামিয়া কুরআনিয়া ইমদাদুল উলুম ফুলছোঁয়া</div>';
-  h+='<div class="hdr-addr">বাকিলা, হাজীগঞ্জ, চাঁদপুর।</div>';
-  h+='<div class="hdr-exam">'+gv('b-exam')+'</div>';
-  h+='<div class="hdr-line">'+gv('b-marhala')+' &nbsp;#&nbsp; '+gv('b-subj')+'</div>';
-  h+='<div class="hdr-line">'+gv('b-kitab')+'</div>';
-  h+='<div class="hdr-line">'+gv('b-dh')+' * '+gv('b-de')+'&nbsp;&nbsp;#&nbsp;&nbsp;সময়: '+gv('b-time')+'&nbsp;&nbsp;#&nbsp;&nbsp;পূর্ণমান: '+gv('b-marks')+'</div>';
+  if(gv('b-madrasah')) h+='<div class="hdr-title">'+gv('b-madrasah')+'</div>';
+  if(gv('b-exam')) h+='<div class="hdr-exam">'+gv('b-exam')+'</div>';
+  // মারহালা / বিষয় / কিতাব — এক লাইনে (খালি থাকলে বাদ)
+  var m1parts=[];
+  if(gv('b-marhala')) m1parts.push(gv('b-marhala'));
+  if(gv('b-subj'))    m1parts.push(gv('b-subj'));
+  if(gv('b-kitab'))   m1parts.push(gv('b-kitab'));
+  if(m1parts.length)  h+='<div class="hdr-line">'+m1parts.join(' &nbsp;#&nbsp; ')+'</div>';
+  // তারিখ / সময় / পূর্ণমান
+  var m2parts=[];
+  if(gv('b-dh'))    m2parts.push(gv('b-dh'));
+  if(gv('b-de'))    m2parts.push(gv('b-de'));
+  if(gv('b-time'))  m2parts.push('সময়: '+gv('b-time'));
+  if(gv('b-marks')) m2parts.push('পূর্ণমান: '+gv('b-marks'));
+  if(m2parts.length) h+='<div class="hdr-line">'+m2parts.join(' &nbsp;#&nbsp; ')+'</div>';
   h+='<hr class="hdr-hr">';
-  h+='<div class="hdr-inst">('+gv('b-inst')+')</div>';
-  h+='<div class="q-area'+(tc?' twocol':'')+'>';
-  QList.forEach(function(q,idx){
+  if(gv('b-inst')) h+='<div class="hdr-inst">('+gv('b-inst')+')</div>';
+  h+='<div class="q-area">';
+  var qNum=0;
+  QList.forEach(function(q){
     var txt=q.text.trim(); if(!txt) return;
-    var lines=txt.split('\n');
-    var firstDone=false;
-    lines.forEach(function(line){
-      line=line.trim(); if(!line) return;
-      var sub=isBanglaSubQ(line);
-      if(!firstDone&&!sub){
-        var em=extractMark(line);
-        h+='<div class="q-main"><span class="q-main-label">প্রশ্ন: '+bn(idx+1)+' ।</span><span class="q-main-text">'+em.text+'</span><span class="q-main-mark">'+em.mark+'</span></div>';
-        firstDone=true;
-      } else if(sub){
-        var sem=extractMark(sub.rest);
-        h+='<div class="q-sub"><span class="q-sub-label">'+sub.label+'</span><span class="q-sub-text">'+sem.text+'</span><span class="q-sub-mark">'+sem.mark+'</span></div>';
-        firstDone=true;
-      } else {
-        var cem=extractMark(line);
-        h+='<div class="q-cont"><span class="q-cont-text">'+cem.text+'</span><span class="q-cont-mark">'+cem.mark+'</span></div>';
-      }
+    // Split by blank line → each part = one numbered question
+    var parts=txt.split(/\n[ \t]*\n/).map(function(p){return p.trim();}).filter(function(p){return p;});
+    parts.forEach(function(part){
+      qNum++;
+      var lines=part.split('\n');
+      var firstDone=false;
+      lines.forEach(function(line){
+        line=line.trim(); if(!line) return;
+        var pa=parseLineAlign(line); line=pa.line;
+        var extraStyle = pa.aln ? alnStyle(pa.aln,'left') : '';
+        var sub=isBanglaSubQ(line);
+        if(!firstDone&&!sub){
+          var em=extractMark(line);
+          h+='<div class="q-main" style="'+extraStyle+'"><span class="q-main-label">প্রশ্ন: '+bn(qNum)+' ।</span><span class="q-main-text">'+em.text+'</span><span class="q-main-mark">'+em.mark+'</span></div>';
+          firstDone=true;
+        } else if(sub){
+          var sem=extractMark(sub.rest);
+          h+='<div class="q-sub" style="'+extraStyle+'"><span class="q-sub-label">'+sub.label+'</span><span class="q-sub-text">'+sem.text+'</span><span class="q-sub-mark">'+sem.mark+'</span></div>';
+          firstDone=true;
+        } else {
+          var cem=extractMark(line);
+          h+='<div class="q-cont" style="'+extraStyle+'"><span class="q-cont-text">'+cem.text+'</span><span class="q-cont-mark">'+cem.mark+'</span></div>';
+        }
+      });
     });
   });
   h+='</div>';
@@ -479,30 +932,54 @@ function buildArabic() {
   var AN=['الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع','الثامن','التاسع','العاشر'];
   var h='';
   h+='<div class="bism" style="font-size:20px;">بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</div>';
-  h+='<div class="hdr-main-line">'+gv('a-waraqah')+'</div>';
+  h+='<div class="hdr-main-line" style="text-align:center;">'+gv('a-waraqah')+'</div>';
+
+  // meta line 1: class / subject / kitab — only show non-empty parts
+  var m1parts=[];
+  if(gv('a-class')) m1parts.push('الصف: '+gv('a-class'));
+  if(gv('a-subj')) m1parts.push('المادة: '+gv('a-subj'));
+  if(gv('a-kitab')) m1parts.push('الكتاب: '+gv('a-kitab'));
+  if(m1parts.length) h+='<div class="hdr-meta" style="text-align:center; margin-top:5px; margin-bottom:3px;">'+m1parts.join(' # ')+'</div>';
+
+  // meta line 2: date / time / year
+  var m2parts=[];
+  if(gv('a-date')) m2parts.push('التاريخ: '+gv('a-date'));
+  if(gv('a-time')) m2parts.push('الوقت: '+gv('a-time'));
+  if(gv('a-year')) m2parts.push('عام '+gv('a-year'));
+  if(m2parts.length) h+='<div class="hdr-meta" style="text-align:center; margin-bottom:3px;">'+m2parts.join(' # ')+'</div>';
+
+  // meta line 3: marks
+  var m3='';
+  if(gv('a-marks')) m3+='الدرجات: '+gv('a-marks');
+  if(gv('a-mdet')) m3+=(m3?' ':'')+gv('a-mdet');
+  if(m3) h+='<div class="hdr-meta" style="text-align:center; margin-bottom:5px;">'+m3+'</div>';
+
   h+='<hr class="hdr-hr">';
-  h+='<div class="hdr-meta">الصف: '+gv('a-class')+' # المادة: '+gv('a-subj')+' # الكتاب: '+gv('a-kitab')+'</div>';
-  h+='<div class="hdr-meta">التاريخ: '+gv('a-date')+' # الوقت: '+gv('a-time')+'&nbsp; عام '+gv('a-year')+'</div>';
-  h+='<div class="hdr-meta">الدرجات: '+gv('a-marks')+' '+gv('a-mdet')+'</div>';
-  h+='<hr class="hdr-hr">';
-  h+='<div class="hdr-inst">'+gv('a-inst')+'</div>';
-  QList.forEach(function(q,idx){
+  if(gv('a-inst')) h+='<div class="hdr-inst" style="text-align:center;">'+gv('a-inst')+'</div>';
+  var aNum=0;
+  QList.forEach(function(q){
     var txt=q.text.trim(); if(!txt) return;
-    h+='<div class="q-heading">السؤال '+(AN[idx]||idx+1)+':</div>';
-    txt.split('\n').forEach(function(line){
-      line=line.trim(); if(!line) return;
-      if(isQawlLine(line)){
-        h+='<div class="qawl-box">'+line+'</div>';
-        return;
-      }
-      var sub=isArabicSubQ(line);
-      if(sub){
-        var sem=extractMark(sub.rest);
-        h+='<div class="q-sub-ar"><span class="q-sub-ar-mark">'+sem.mark+'</span><span class="q-sub-ar-text">'+sem.text+'</span><span class="q-sub-ar-label">'+sub.label+'</span></div>';
-      } else {
-        var em=extractMark(line);
-        h+='<div class="q-plain">'+em.text+(em.mark?'&nbsp;&nbsp;'+em.mark:'')+'</div>';
-      }
+    var parts=txt.split(/\n[ \t]*\n/).map(function(p){return p.trim();}).filter(function(p){return p;});
+    parts.forEach(function(part){
+      aNum++;
+      h+='<div class="q-heading">السؤال '+(AN[aNum-1]||aNum)+':</div>';
+      part.split('\n').forEach(function(line){
+        line=line.trim(); if(!line) return;
+        var pa=parseLineAlign(line); line=pa.line;
+        var extraStyle = pa.aln ? alnStyle(pa.aln,'right') : '';
+        if(isQawlLine(line)){
+          h+='<div class="qawl-box" style="'+extraStyle+'">'+line+'</div>';
+          return;
+        }
+        var sub=isArabicSubQ(line);
+        if(sub){
+          var sem=extractMark(sub.rest);
+          h+='<div class="q-sub-ar" style="'+extraStyle+'"><span class="q-sub-ar-label">'+sub.label+'</span><span class="q-sub-ar-text" style="'+extraStyle+'">'+sem.text+'</span><span class="q-sub-ar-mark">'+sem.mark+'</span></div>';
+        } else {
+          var em=extractMark(line);
+          h+='<div class="q-sub-ar" style="'+extraStyle+'"><span class="q-sub-ar-label"></span><span class="q-sub-ar-text" style="'+extraStyle+'">'+em.text+'</span><span class="q-sub-ar-mark">'+em.mark+'</span></div>';
+        }
+      });
     });
   });
   return h;
@@ -512,30 +989,49 @@ function buildArabic() {
 function buildUrdu() {
   var UN=['اوّل','دوم','سوم','چہارم','پنجم','ششم','ہفتم','ہشتم','نہم','دہم'];
   var h='';
-  h+='<div class="bism" style="font-size:20px;">بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</div>';
-  h+='<div class="hdr-main-line">'+gv('u-waraqah')+'</div>';
+  h+='<div class="bism" style="font-size:20px; text-align:center;">بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</div>';
+  h+='<div class="hdr-main-line" style="text-align:center;">'+gv('u-waraqah')+'</div>';
+
+  // meta line 1: class / subject / kitab
+  var u1parts=[];
+  if(gv('u-class')) u1parts.push('جماعت: '+gv('u-class'));
+  if(gv('u-subj')) u1parts.push('مضمون: '+gv('u-subj'));
+  if(gv('u-kitab')) u1parts.push('کتاب: '+gv('u-kitab'));
+  if(u1parts.length) h+='<div class="hdr-meta" style="text-align:center; margin-top:5px; margin-bottom:5px;">'+u1parts.join(' # ')+'</div>';
+
+  // meta line 2: date / time / marks
+  var u2parts=[];
+  if(gv('u-date')) u2parts.push('تاریخ: '+gv('u-date'));
+  if(gv('u-time')) u2parts.push('وقت: '+gv('u-time'));
+  if(gv('u-marks')) u2parts.push('کل نمبر: '+gv('u-marks'));
+  if(u2parts.length) h+='<div class="hdr-meta" style="text-align:center; margin-bottom:5px;">'+u2parts.join(' # ')+'</div>';
+
+  if(gv('u-inst')) h+='<div class="hdr-meta" style="text-align:center; margin-bottom:5px;">'+gv('u-inst')+'</div>';
   h+='<hr class="hdr-hr">';
-  h+='<div class="hdr-meta">جماعت: '+gv('u-class')+' # مضمون: '+gv('u-subj')+' # کتاب: '+gv('u-kitab')+'</div>';
-  h+='<div class="hdr-meta">تاریخ: '+gv('u-date')+' # وقت: '+gv('u-time')+' # کل نمبر: '+gv('u-marks')+'</div>';
-  h+='<hr class="hdr-hr">';
-  h+='<div class="hdr-inst">'+gv('u-inst')+'</div>';
-  QList.forEach(function(q,idx){
+  var uNum=0;
+  QList.forEach(function(q){
     var txt=q.text.trim(); if(!txt) return;
-    h+='<div class="q-heading">سوال '+(UN[idx]||idx+1)+':</div>';
-    txt.split('\n').forEach(function(line){
-      line=line.trim(); if(!line) return;
-      if(isQawlLine(line)){
-        h+='<div class="qawl-box">'+line+'</div>';
-        return;
-      }
-      var sub=isArabicSubQ(line);
-      if(sub){
-        var sem=extractMark(sub.rest);
-        h+='<div class="q-sub-ar"><span class="q-sub-ar-mark">'+sem.mark+'</span><span class="q-sub-ar-text">'+sem.text+'</span><span class="q-sub-ar-label">'+sub.label+'</span></div>';
-      } else {
-        var em=extractMark(line);
-        h+='<div class="q-plain">'+em.text+(em.mark?'&nbsp;&nbsp;'+em.mark:'')+'</div>';
-      }
+    var parts=txt.split(/\n[ \t]*\n/).map(function(p){return p.trim();}).filter(function(p){return p;});
+    parts.forEach(function(part){
+      uNum++;
+      h+='<div class="q-heading">سوال '+(UN[uNum-1]||uNum)+':</div>';
+      part.split('\n').forEach(function(line){
+        line=line.trim(); if(!line) return;
+        var pa=parseLineAlign(line); line=pa.line;
+        var extraStyle = pa.aln ? alnStyle(pa.aln,'right') : '';
+        if(isQawlLine(line)){
+          h+='<div class="qawl-box" style="'+extraStyle+'">'+line+'</div>';
+          return;
+        }
+        var sub=isArabicSubQ(line);
+        if(sub){
+          var sem=extractMark(sub.rest);
+          h+='<div class="q-sub-ar" style="'+extraStyle+'"><span class="q-sub-ar-label">'+sub.label+'</span><span class="q-sub-ar-text" style="'+extraStyle+'">'+sem.text+'</span><span class="q-sub-ar-mark">'+sem.mark+'</span></div>';
+        } else {
+          var em=extractMark(line);
+          h+='<div class="q-sub-ar" style="'+extraStyle+'"><span class="q-sub-ar-label"></span><span class="q-sub-ar-text" style="'+extraStyle+'">'+em.text+'</span><span class="q-sub-ar-mark">'+em.mark+'</span></div>';
+        }
+      });
     });
   });
   return h;
@@ -546,11 +1042,26 @@ function renderPreview() {
   saveQ();
   var paper=document.getElementById('paper');
   var pgClass=PAGE==='a4'?'a4':PAGE==='narrow'?'narrow':'landscape';
+  var tc=document.getElementById('twocol').checked;
+  // দুই কলাম চেক থাকলে পেপার সবসময় landscape width পাবে
+  if(tc) pgClass='landscape';
   paper.className='paper '+pgClass+' '+LANG;
   paper.style.boxShadow='0 4px 24px rgba(0,0,0,.15)';
-  if(LANG==='bangla') paper.innerHTML=buildBangla();
-  else if(LANG==='arabic') paper.innerHTML=buildArabic();
-  else paper.innerHTML=buildUrdu();
+
+  var content;
+  if(LANG==='bangla') content=buildBangla();
+  else if(LANG==='arabic') content=buildArabic();
+  else content=buildUrdu();
+
+  if(tc) {
+    paper.innerHTML='<div class="twocol-wrapper">'
+      +'<div class="col-half">'+content+'</div>'
+      +'<div class="col-half">'+content+'</div>'
+      +'</div>';
+  } else {
+    paper.innerHTML=content;
+  }
+  applyZoomStyles();
 }
 
 // ===== TOAST =====
@@ -563,21 +1074,40 @@ function showToast(msg){
 // ===== PDF =====
 function doPDF(){
   renderPreview();
-  // Set print page size dynamically
   var styleId = 'print-page-style';
   var existing = document.getElementById(styleId);
   if (existing) existing.remove();
   var style = document.createElement('style');
   style.id = styleId;
-  if (PAGE === 'land') {
-    style.textContent = '@page { size: A4 landscape; margin: 10mm; }';
+  var tc = document.getElementById('twocol').checked;
+  if (tc) {
+    // স্লাইডারের বর্তমান ফন্ট সাইজ নিন
+    var tcFs = document.getElementById('twocol-size-slider').value + 'px';
+    style.textContent = '@page { size: A4 landscape; margin: 8mm; }'
+      + ':root { --tc-fs: ' + tcFs + '; }'
+      + '.paper.landscape { width:100% !important; min-height:0 !important; padding:0 !important; }'
+      + '.twocol-wrapper { display:flex !important; width:100% !important; gap:0 !important; }'
+      + '.twocol-wrapper .col-half { flex:1 !important; padding:0 6mm !important; border-right:1px solid #555 !important; box-sizing:border-box !important; overflow:hidden !important; font-size:' + tcFs + ' !important; }'
+      + '.twocol-wrapper .col-half:last-child { border-right:none !important; }'
+      + '.twocol-wrapper * { word-break:break-word !important; overflow-wrap:break-word !important; }';
+  } else if (PAGE === 'land') {
+    var mFs = document.getElementById('main-size-slider').value + 'px';
+    style.textContent = '@page { size: A4 landscape; margin: 8mm; }'
+      + ':root { --main-fs: ' + mFs + '; }'
+      + '.paper.landscape { width:100% !important; min-height:0 !important; padding:0 !important; }';
   } else if (PAGE === 'narrow') {
-    style.textContent = '@page { size: A4 portrait; margin: 8mm; }';
+    var mFs = document.getElementById('main-size-slider').value + 'px';
+    style.textContent = '@page { size: A4 portrait; margin: 8mm; }'
+      + ':root { --main-fs: ' + mFs + '; }'
+      + '.paper.narrow { width:100% !important; min-height:0 !important; }';
   } else {
-    style.textContent = '@page { size: A4 portrait; margin: 12mm; }';
+    var mFs = document.getElementById('main-size-slider').value + 'px';
+    style.textContent = '@page { size: A4 portrait; margin: 12mm; }'
+      + ':root { --main-fs: ' + mFs + '; }'
+      + '.paper.a4 { width:100% !important; min-height:0 !important; }';
   }
   document.head.appendChild(style);
-  setTimeout(function(){window.print(); showToast('Print → Save as PDF বেছে নিন');},300);
+  setTimeout(function(){ window.print(); showToast('Print → Save as PDF বেছে নিন'); }, 300);
 }
 
 // ===== WORD =====
@@ -719,33 +1249,432 @@ async function doWord(){
   } catch(e){showToast('⚠️ ত্রুটি: '+e.message);console.error(e);}
 }
 
+// ===== FONT HELPERS =====
+function getActiveFontFor(lang) {
+  var sel = document.getElementById('font-'+lang);
+  if (!sel) return null;
+  var v = sel.value;
+  if (v.startsWith('custom-') && CUSTOM_FONTS[lang]) return CUSTOM_FONTS[lang];
+  if (v.startsWith('custom-')) return null;
+  return v;
+}
+
+function applyFonts() {
+  var bf = getActiveFontFor('bangla') || 'Noto Serif Bengali';
+  var af = getActiveFontFor('arabic') || 'Noto Naskh Arabic';
+  var uf = getActiveFontFor('urdu')   || 'Noto Naskh Arabic';
+  var css = '';
+  css += '.paper.bangla { font-family: "'+bf+'", serif !important; }\n';
+  css += '.paper.arabic, .paper.arabic * { font-family: "'+af+'", serif !important; }\n';
+  css += '.paper.urdu,   .paper.urdu *   { font-family: "'+uf+'", serif !important; }\n';
+  document.getElementById('custom-font-style').textContent = css;
+}
+
+function loadFontFile(lang, file) {
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var fontName = 'CustomFont_' + lang + '_' + Date.now();
+    var style = document.createElement('style');
+    style.textContent = '@font-face { font-family: "' + fontName + '"; src: url("' + e.target.result + '"); }';
+    document.head.appendChild(style);
+    CUSTOM_FONTS[lang] = fontName;
+    var nameEl = document.getElementById('font-' + lang + '-name');
+    if (nameEl) { nameEl.textContent = '✅ ' + file.name; nameEl.style.display = 'block'; }
+    applyFonts();
+    renderPreview();
+    showToast('✅ ফন্ট লোড হয়েছে: ' + file.name);
+  };
+  reader.readAsDataURL(file);
+}
+
+// ===== LOCAL STORAGE =====
+function saveToLocal() {
+  saveQ();
+  var data = {
+    lang: LANG, page: PAGE,
+    bFields: {}, aFields: {}, uFields: {},
+    questions: QList,
+    twocol: document.getElementById('twocol').checked
+  };
+  ['b-madrasah','b-exam','b-marhala','b-subj','b-kitab','b-dh','b-de','b-time','b-marks','b-inst'].forEach(function(id){
+    data.bFields[id] = gv(id);
+  });
+  ['a-waraqah','a-class','a-subj','a-kitab','a-date','a-year','a-time','a-marks','a-mdet','a-inst'].forEach(function(id){
+    data.aFields[id] = gv(id);
+  });
+  ['u-waraqah','u-class','u-subj','u-kitab','u-date','u-time','u-marks','u-inst'].forEach(function(id){
+    data.uFields[id] = gv(id);
+  });
+  try { localStorage.setItem('prashnopotro_data', JSON.stringify(data)); } catch(e){}
+  return data;
+}
+
+function loadFromLocal() {
+  try {
+    var raw = localStorage.getItem('prashnopotro_data');
+    if (!raw) return;
+    var data = JSON.parse(raw);
+    if (data.lang) { LANG = data.lang; }
+    if (data.page) { PAGE = data.page; }
+    if (data.twocol !== undefined) document.getElementById('twocol').checked = data.twocol;
+    Object.keys(data.bFields||{}).forEach(function(id){ var e=document.getElementById(id); if(e) e.value=data.bFields[id]; });
+    Object.keys(data.aFields||{}).forEach(function(id){ var e=document.getElementById(id); if(e) e.value=data.aFields[id]; });
+    Object.keys(data.uFields||{}).forEach(function(id){ var e=document.getElementById(id); if(e) e.value=data.uFields[id]; });
+    if (data.questions && data.questions.length) { QList = data.questions; QCnt = QList.length; }
+  } catch(e) {}
+}
+
+// ===== TELEGRAM SAVE =====
+async function saveToTelegram() {
+  showToast('⏳ টেলিগ্রামে পাঠানো হচ্ছে...');
+  saveQ();
+  var data = saveToLocal();
+
+  // Build summary text
+  var lines = ['📋 *প্রশ্নপত্র ব্যাকআপ*\n'];
+  lines.push('🌐 ভাষা: ' + data.lang + ' | পেজ: ' + data.page);
+  if (data.lang === 'bangla') {
+    if (data.bFields['b-exam'])    lines.push('📝 পরীক্ষা: ' + data.bFields['b-exam']);
+    if (data.bFields['b-marhala']) lines.push('🎓 মারহালা: ' + data.bFields['b-marhala']);
+    if (data.bFields['b-subj'])    lines.push('📚 বিষয়: ' + data.bFields['b-subj']);
+    if (data.bFields['b-marks'])   lines.push('🔢 পূর্ণমান: ' + data.bFields['b-marks']);
+  } else if (data.lang === 'arabic') {
+    if (data.aFields['a-waraqah']) lines.push('📝 ' + data.aFields['a-waraqah']);
+    if (data.aFields['a-marks'])   lines.push('🔢 الدرجات: ' + data.aFields['a-marks']);
+  } else {
+    if (data.uFields['u-waraqah']) lines.push('📝 ' + data.uFields['u-waraqah']);
+    if (data.uFields['u-marks'])   lines.push('🔢 کل نمبر: ' + data.uFields['u-marks']);
+  }
+  lines.push('\n📦 মোট প্রশ্ন: ' + data.questions.filter(function(q){return q.text.trim();}).length + 'টি');
+  data.questions.forEach(function(q, i) {
+    if (q.text.trim()) lines.push((i+1) + '. ' + q.text.trim().slice(0, 80) + (q.text.length > 80 ? '...' : ''));
+  });
+  lines.push('\n🕐 সেভ সময়: ' + new Date().toLocaleString('bn-BD'));
+
+  // Send text summary
+  var text = lines.join('\n');
+  try {
+    var r1 = await fetch('https://api.telegram.org/bot' + TG_TOKEN + '/sendMessage', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({chat_id: TG_CHAT, text: text, parse_mode: 'Markdown'})
+    });
+    // Send full JSON backup as file
+    var jsonBlob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    var fd = new FormData();
+    fd.append('chat_id', TG_CHAT);
+    fd.append('document', jsonBlob, 'prashnopotro_backup.json');
+    fd.append('caption', '📂 সম্পূর্ণ ডেটা ব্যাকআপ');
+    await fetch('https://api.telegram.org/bot' + TG_TOKEN + '/sendDocument', {method:'POST', body: fd});
+    showToast('✅ টেলিগ্রামে সেভ হয়েছে!');
+  } catch(e) {
+    showToast('⚠️ ত্রুটি: ' + e.message);
+  }
+}
+
+// ===== QUESTION LIBRARY =====
+var LIB_KEY = 'prashnopotro_library';
+
+function libLoad() {
+  try { return JSON.parse(localStorage.getItem(LIB_KEY) || '[]'); }
+  catch(e) { return []; }
+}
+function libSave(items) {
+  try { localStorage.setItem(LIB_KEY, JSON.stringify(items)); } catch(e){}
+}
+
+function libSaveCurrentQuestions() {
+  var subj = document.getElementById('lib-subj-inp').value.trim();
+  if (!subj) { showToast('⚠️ আগে বিষয় লিখুন'); return; }
+  saveQ();
+  var items = libLoad();
+  var added = 0;
+  QList.forEach(function(q) {
+    var txt = q.text.trim();
+    if (!txt) return;
+    items.push({
+      id: Date.now() + Math.random(),
+      subj: subj,
+      lang: LANG,
+      text: txt,
+      marks: q.marks || '',
+      date: new Date().toLocaleDateString('bn-BD')
+    });
+    added++;
+  });
+  libSave(items);
+  document.getElementById('lib-subj-inp').value = '';
+  showToast('✅ ' + added + 'টি প্রশ্ন "' + subj + '" বিষয়ে সেভ হয়েছে');
+  libRender();
+}
+
+function libUseQuestion(item) {
+  saveQ();
+  // Add as new question
+  QCnt++;
+  QList.push({ id: QCnt, text: item.text, marks: item.marks || '' });
+  renderQList();
+  renderPreview();
+  showToast('✅ প্রশ্ন যোগ হয়েছে');
+  libClose();
+}
+
+function libDelete(id) {
+  var items = libLoad().filter(function(x){ return x.id !== id; });
+  libSave(items);
+  libRender();
+  showToast('🗑️ মুছে ফেলা হয়েছে');
+}
+
+var LIB_FILTER_SUBJ = 'সব';
+var LIB_SEARCH = '';
+
+function libRender() {
+  var items = libLoad();
+  // Build subject tabs
+  var subjs = ['সব'];
+  items.forEach(function(x){ if (subjs.indexOf(x.subj) === -1) subjs.push(x.subj); });
+  var tabsEl = document.getElementById('lib-tabs');
+  tabsEl.innerHTML = '';
+  subjs.forEach(function(s) {
+    var btn = document.createElement('button');
+    btn.className = 'lib-tab' + (s === LIB_FILTER_SUBJ ? ' on' : '');
+    btn.textContent = s === 'সব' ? 'সব (' + items.length + ')' : s;
+    btn.setAttribute('data-subj', s);
+    btn.addEventListener('click', function() {
+      LIB_FILTER_SUBJ = s; libRender();
+    });
+    tabsEl.appendChild(btn);
+  });
+
+  // Filter
+  var filtered = items.filter(function(x) {
+    var matchSubj = LIB_FILTER_SUBJ === 'সব' || x.subj === LIB_FILTER_SUBJ;
+    var matchSearch = !LIB_SEARCH || x.text.toLowerCase().indexOf(LIB_SEARCH) !== -1 || x.subj.indexOf(LIB_SEARCH) !== -1;
+    return matchSubj && matchSearch;
+  });
+
+  var listEl = document.getElementById('lib-list');
+  if (!filtered.length) {
+    listEl.innerHTML = '<div style="text-align:center;padding:30px;color:#aaa;font-size:13px;">কোনো প্রশ্ন নেই</div>';
+    return;
+  }
+  listEl.innerHTML = '';
+  // Show newest first
+  filtered.slice().reverse().forEach(function(item) {
+    var div = document.createElement('div');
+    div.className = 'lib-item';
+    var preview = item.text.length > 120 ? item.text.slice(0, 120) + '...' : item.text;
+    var langLabel = item.lang === 'bangla' ? '🇧🇩' : item.lang === 'arabic' ? '🕌' : '🌙';
+    div.innerHTML =
+      '<div class="lib-item-text">'
+      + '<div style="font-weight:700;font-size:11px;color:#1a5c38;margin-bottom:3px;">'
+      + langLabel + ' ' + item.subj + '</div>'
+      + '<div style="' + (item.lang !== 'bangla' ? 'direction:rtl;text-align:right;font-family:"Noto Naskh Arabic",serif;' : '') + '">'
+      + preview.replace(/\n/g,'<br>') + '</div>'
+      + '<div class="lib-item-meta">' + item.date + (item.marks ? ' • নম্বর: ' + item.marks : '') + '</div>'
+      + '</div>'
+      + '<div class="lib-item-btns">'
+      + '<button class="lib-use-btn">➕ ব্যবহার করুন</button>'
+      + '<button class="lib-del-btn">🗑️ মুছুন</button>'
+      + '</div>';
+    div.querySelector('.lib-use-btn').addEventListener('click', function(){ libUseQuestion(item); });
+    div.querySelector('.lib-del-btn').addEventListener('click', function(){ libDelete(item.id); });
+    listEl.appendChild(div);
+  });
+}
+
+var LAST_LINE_ALIGN = 'right';
+
+function setLastLineAlign(align) {
+  LAST_LINE_ALIGN = align;
+  // Update button styles
+  ['right','center','left'].forEach(function(a) {
+    var btn = document.getElementById('aln-' + a.charAt(0));
+    if (btn) btn.style.background = (a === align) ? '#1a5c38' : '#eee';
+    if (btn) btn.style.color = (a === align) ? 'white' : '#333';
+  });
+  // Apply to last q-sub-ar in each question group
+  var paper = document.getElementById('paper');
+  if (!paper) return;
+  // Find all question headings and apply to last sub-ar before next heading
+  var allSubAr = paper.querySelectorAll('.q-sub-ar');
+  // Find last one overall (the truly last line)
+  if (allSubAr.length > 0) {
+    var last = allSubAr[allSubAr.length - 1];
+    last.style.textAlign = align;
+    last.style.justifyContent = align === 'center' ? 'center' : (align === 'left' ? 'flex-end' : 'flex-start');
+    var textEl = last.querySelector('.q-sub-ar-text');
+    if (textEl) textEl.style.textAlign = align;
+  }
+}
+
+// ===== LIBRARY TELEGRAM SYNC =====
+var LIB_TG_MSG_KEY = 'prashnopotro_lib_tg_msgid';
+
+async function libSaveToTelegram() {
+  var items = libLoad();
+  if (!items.length) { showToast('⚠️ লাইব্রেরিতে কোনো প্রশ্ন নেই'); return; }
+  showToast('⏳ লাইব্রেরি টেলিগ্রামে পাঠানো হচ্ছে...');
+  try {
+    // আগের message থাকলে delete করো
+    var prevMsgId = localStorage.getItem(LIB_TG_MSG_KEY);
+    if (prevMsgId) {
+      try {
+        await fetch('https://api.telegram.org/bot' + TG_TOKEN + '/deleteMessage', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ chat_id: TG_CHAT, message_id: parseInt(prevMsgId) })
+        });
+      } catch(e2) {} // delete fail হলেও সমস্যা নেই
+    }
+    // নতুন file পাঠাও
+    var jsonBlob = new Blob([JSON.stringify(items, null, 2)], {type: 'application/json'});
+    var fd = new FormData();
+    fd.append('chat_id', TG_CHAT);
+    fd.append('document', jsonBlob, 'prashnopotro_library.json');
+    fd.append('caption', '📚 প্রশ্ন লাইব্রেরি ব্যাকআপ — মোট: ' + items.length + 'টি প্রশ্ন\n🕐 ' + new Date().toLocaleString('bn-BD'));
+    var resp = await fetch('https://api.telegram.org/bot' + TG_TOKEN + '/sendDocument', {method:'POST', body: fd});
+    var result = await resp.json();
+    // নতুন message_id সেভ করো
+    if (result.ok && result.result && result.result.message_id) {
+      localStorage.setItem(LIB_TG_MSG_KEY, result.result.message_id);
+    }
+    showToast('✅ লাইব্রেরি টেলিগ্রামে আপডেট হয়েছে!');
+  } catch(e) {
+    showToast('⚠️ ত্রুটি: ' + e.message);
+  }
+}
+
+function libLoadFromTelegram() {
+  showToast('ℹ️ টেলিগ্রামে গিয়ে prashnopotro_library.json ফাইলটি ডাউনলোড করুন, তারপর নিচের ইমপোর্ট বাটন দিয়ে আনুন');
+}
+
+function libImportFromFile(file) {
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var items = JSON.parse(e.target.result);
+      if (!Array.isArray(items)) throw new Error('invalid');
+      var existing = libLoad();
+      var merged = existing.slice();
+      items.forEach(function(item) {
+        if (!merged.some(function(x){ return x.id === item.id; })) merged.push(item);
+      });
+      libSave(merged);
+      libRender();
+      showToast('✅ ' + items.length + 'টি প্রশ্ন ইমপোর্ট হয়েছে!');
+    } catch(e2) { showToast('⚠️ ফাইল পড়া যায়নি'); }
+  };
+  reader.readAsText(file);
+}
+
+function libOpen() {
+  LIB_FILTER_SUBJ = 'সব';
+  LIB_SEARCH = '';
+  document.getElementById('lib-search').value = '';
+  // Pre-fill subject from current lang
+  var subjMap = { bangla:'বাংলা', arabic:'আরবি', urdu:'উর্দু' };
+  document.getElementById('lib-subj-inp').value = subjMap[LANG] || '';
+  libRender();
+  document.getElementById('lib-overlay').classList.add('open');
+}
+function libClose() {
+  document.getElementById('lib-overlay').classList.remove('open');
+}
+
 // ===== BIND EVENTS =====
 document.addEventListener('DOMContentLoaded', function(){
+  // Load saved data first
+  loadFromLocal();
+
   document.getElementById('btn-b').addEventListener('click',function(){setLang('bangla');});
   document.getElementById('btn-a').addEventListener('click',function(){setLang('arabic');});
   document.getElementById('btn-u').addEventListener('click',function(){setLang('urdu');});
   document.getElementById('pg-a4').addEventListener('click',function(){setPage('a4');});
   document.getElementById('pg-narrow').addEventListener('click',function(){setPage('narrow');});
   document.getElementById('pg-land').addEventListener('click',function(){setPage('land');});
-  document.getElementById('twocol').addEventListener('change',function(){renderPreview();});
+  document.getElementById('twocol').addEventListener('change',function(){
+    var row = document.getElementById('twocol-size-row');
+    row.style.display = this.checked ? 'block' : 'none';
+    renderPreview();
+  });
+  // দুই কলাম ফন্ট স্লাইডার
+  document.getElementById('twocol-size-slider').addEventListener('input', function(){
+    var val = parseFloat(this.value);
+    document.documentElement.style.setProperty('--tc-fs', val + 'px');
+    document.getElementById('twocol-size-val').textContent = val + 'px';
+  });
+  // সাধারণ ফন্ট সাইজ স্লাইডার
+  document.getElementById('main-size-slider').addEventListener('input', function(){
+    var val = parseFloat(this.value);
+    document.getElementById('main-size-val').textContent = val + 'px';
+    document.documentElement.style.setProperty('--main-fs', val + 'px');
+  });
+  // লাইন স্পেসিং স্লাইডার
+  document.getElementById('space-zoom-slider').addEventListener('input', function(){
+    currentSpaceZoom = parseFloat(this.value);
+    var bVal = bn(currentSpaceZoom.toFixed(2)) + 'x';
+    document.getElementById('space-zoom-val').textContent = bVal;
+    applyZoomStyles();
+  });
   document.getElementById('addqbtn').addEventListener('click',function(){addQ();});
   document.getElementById('prevbtn').addEventListener('click',function(){renderPreview();showToast('প্রিভিউ আপডেট হয়েছে ✓');});
   document.getElementById('pdfbtn').addEventListener('click',function(){doPDF();});
   document.getElementById('wordbtn').addEventListener('click',function(){doWord();});
+  document.getElementById('lib-close').addEventListener('click',function(){libClose();});
+  document.getElementById('lib-save-btn').addEventListener('click',function(){libSaveCurrentQuestions();});
+  document.getElementById('lib-search').addEventListener('input',function(){
+    LIB_SEARCH = this.value.trim().toLowerCase();
+    libRender();
+  });
+  document.getElementById('lib-overlay').addEventListener('click',function(e){
+    if(e.target===this) libClose();
+  });
+
+
+  // Font selectors
+  ['bangla','arabic','urdu'].forEach(function(lang){
+    var sel = document.getElementById('font-'+lang);
+    var fileInp = document.getElementById('font-'+lang+'-file');
+    if (sel) sel.addEventListener('change', function(){
+      if (sel.value.startsWith('custom-')) {
+        fileInp.click();
+      } else {
+        CUSTOM_FONTS[lang] = null;
+        applyFonts();
+        renderPreview();
+      }
+    });
+    if (fileInp) fileInp.addEventListener('change', function(){
+      loadFontFile(lang, fileInp.files[0]);
+    });
+  });
+
   document.getElementById('togglebtn').addEventListener('click',function(){
     var pp=document.getElementById('prevpanel');
     if(pp.classList.contains('open')){pp.classList.remove('open');pp.style.display='none';}
     else{pp.classList.add('open');pp.style.display='flex';}
   });
-  var hids=['b-exam','b-marhala','b-subj','b-kitab','b-dh','b-de','b-time','b-marks','b-inst',
+  var hids=['b-madrasah','b-exam','b-marhala','b-subj','b-kitab','b-dh','b-de','b-time','b-marks','b-inst',
             'a-waraqah','a-class','a-subj','a-kitab','a-date','a-year','a-time','a-marks','a-mdet','a-inst',
             'u-waraqah','u-class','u-subj','u-kitab','u-date','u-time','u-marks','u-inst'];
   hids.forEach(function(id){
     var el=document.getElementById(id);
-    if(el) el.addEventListener('input',function(){renderPreview();});
+    if(el) el.addEventListener('input',function(){ saveToLocal(); renderPreview(); });
   });
   if(window.innerWidth<=860) document.getElementById('togglebtn').style.display='block';
-  addQ();
+
+  // Apply saved lang/page state
+  setLang(LANG);
+  setPage(PAGE);
+  setPreviewZoom(60);
+
+  if (!QList.length) addQ();
+  else renderQList();
+  applyFonts();
   renderPreview();
 });
 </script>
