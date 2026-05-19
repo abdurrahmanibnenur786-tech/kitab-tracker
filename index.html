@@ -1093,7 +1093,11 @@ function almMatchesDate(alm, dateStr){
   // বার্ষিক
   if(alm.yearmonth>0 && alm.yearday>0) return mm===alm.yearmonth && dd===alm.yearday;
   // প্রতিদিন (once ছাড়া)
-  if(alm.once) return alm.date===dateStr;
+  if(alm.once){
+    // once এলার্মে date না থাকলে (সেট করা হয়নি) আজ বা কালকের জন্য match করুক
+    if(!alm.date) return true;
+    return alm.date===dateStr;
+  }
   return true;
 }
 
@@ -1341,21 +1345,39 @@ function backfillMissDays(id){
   else if(usedForMiss>0) showToast('📅 আগের মিস আংশিক পূরণ হয়েছে',3000);
 }
 
-// টার্গেট পূরণ হলে পুরস্কার জমা করো
+// টার্গেট পূরণ হলে বা আংশিক পড়লে proportional পুরস্কার জমা করো
 function addRewardIfTargetMet(id){
   var k=gk(id), t=tds(), dt=k.dt||0;
   if(dt<=0) return;
   var todayRead=k.h[t]||0;
-  if(todayRead<dt) return;
-  var rewardKey='reward_given_'+id+'_'+t;
-  if(localStorage.getItem(rewardKey)) return;
+  if(todayRead<=0) return;
   var rate=REWARD_TARGET_RATE||0;
   if(rate<=0) return;
-  k.reward=Math.round(((k.reward||0)+rate)*100)/100;
-  localStorage.setItem(rewardKey,'1');
+  // আজকের জন্য আগে কতটুকু reward দেওয়া হয়েছে
+  var prevGivenKey='reward_given_amount_'+id+'_'+t;
+  var prevGiven=parseFloat(localStorage.getItem(prevGivenKey)||'0')||0;
+  // অনুপাতে reward হিসাব করো
+  var ratio=Math.min(todayRead/dt, 1);
+  var totalEarned=Math.round(rate*ratio*100)/100;
+  var toAdd=Math.round((totalEarned-prevGiven)*100)/100;
+  if(toAdd<=0) return;
+  k.reward=Math.round(((k.reward||0)+toAdd)*100)/100;
+  localStorage.setItem(prevGivenKey,''+totalEarned);
   ss();
   var _fmt=function(v){ return v>=1?'৳'+toBn(v.toFixed(2)):toBn(Math.round(v*100))+' পয়সা'; };
-  showToast('🎁 পুরস্কার জমা: '+_fmt(rate)+' | মোট: '+_fmt(k.reward),3500);
+  var pctShow=Math.round(ratio*100);
+  showToast('🎁 পুরস্কার জমা: '+_fmt(totalEarned)+' ('+toBn(pctShow)+'%) | মোট: '+_fmt(k.reward),3500);
+}
+
+// দৈনিক লক্ষ্যের আংশিক না পড়লে proportional সদকা track করো (দিন শেষে)
+// এটা মুহাসাবার সময় call হবে — পার্শিয়াল মিসও হিসাবে আসবে
+function calcProportionalDailySadaqa(id, dateStr){
+  var k=gk(id), dt=k.dt||0;
+  if(dt<=0) return 0;
+  var read=k.h[dateStr]||0;
+  if(read>=dt) return 0; // পূর্ণ করলে কোনো সদকা নেই
+  var ratio=Math.max(0, 1-(read/dt)); // কতটুকু মিস হয়েছে
+  return Math.round(SADAQA_TARGET_RATE*ratio*100)/100;
 }
 
 // ডবল পড়লে মিস সদকা কাটাও
@@ -1971,7 +1993,11 @@ function makeCard(kit){
       }
     });
     if(dupFound){
-      dupAlarmPending={fid:fid,tval:tval,dval:dval,lval:lval,wval:wval,once:once,ndays:ndays,weekdays:weekdays,dates:dates,biweekly:biweekly,biweeklyDay:biweeklyDay,monthday:monthday,yearmonth:yearmonth,yearday:yearday};
+      var remindCbD=document.getElementById('ar-remind-'+fid);
+      var remindD=remindCbD?remindCbD.checked:false;
+      var notDoneRateElD=document.getElementById('ar-notdone-rate-'+fid);
+      var notDoneRateD=notDoneRateElD&&notDoneRateElD.value.trim()!==''?parseFloat(notDoneRateElD.value):null;
+      dupAlarmPending={fid:fid,tval:tval,dval:dval,lval:lval,wval:wval,once:once,ndays:ndays,weekdays:weekdays,dates:dates,biweekly:biweekly,biweeklyDay:biweeklyDay,monthday:monthday,yearmonth:yearmonth,yearday:yearday,remind:remindD,notDoneRate:notDoneRateD};
       showDupAlarmWarning(fid,tval,dval,lval,wval,dupKitName,dupLabel,dupConflictType,dupConflictDetail);
     } else {
       var remindCb=document.getElementById('ar-remind-'+fid);
@@ -3142,15 +3168,27 @@ function buildPinDashboard(){
   });
 
   var isOpen = wasOpen;
-  // ফাঁকা সময় — pin-dashboard এর বাইরে আলাদা div
+  // ফাঁকা সময় — pin-dashboard এর আগে
   var freeSlotsHtml = buildTopFreeSlotsHTML();
   var freeSlotEl = document.getElementById('top-free-slots-block');
   if(!freeSlotEl){
     freeSlotEl = document.createElement('div');
     freeSlotEl.id = 'top-free-slots-block';
-    container.parentNode.insertBefore(freeSlotEl, container);
   }
   freeSlotEl.innerHTML = freeSlotsHtml;
+  // future-alarm-notice এর পরে, pin-dashboard এর আগে রাখো
+  // প্রতিবার সঠিক জায়গায় move করো
+  var pinContainer2 = document.getElementById('pin-dashboard');
+  if(pinContainer2){
+    var noticeEl = document.getElementById('future-alarm-notice');
+    if(noticeEl && noticeEl.nextSibling !== freeSlotEl){
+      // notice এর পরে insert করো
+      noticeEl.parentNode.insertBefore(freeSlotEl, noticeEl.nextSibling);
+    } else if(!noticeEl){
+      // notice না থাকলে pin এর আগে
+      pinContainer2.parentNode.insertBefore(freeSlotEl, pinContainer2);
+    }
+  }
 
   var html = '<div class="pin-dashboard">';
   html += '<div class="pin-dash-head'+(isOpen?' open':'')+'" id="pin-dash-head">';
@@ -3695,8 +3733,9 @@ function acpFromStart(){
     kk.alarms=kk.alarms.filter(function(a){ return !(a.time===acpPendingTime && (a.once||a.expiry)); });
     ss(); renderAll(); acpIsOnce=false;
   }
+  // মাশাআল্লাহ বার্তা + ফুলের পাপড়ি দেখাও
+  showFromStartCelebration();
   if(acpIsLive){
-    showToast('বিসমিল্লাহ! '+acpPendingKitName+' শুরু করুন। 📖', 4000);
     launchTarget(1);
     if(acpPendingKitId){
       activeTab=acpPendingKitId;
@@ -3713,9 +3752,43 @@ function acpFromStart(){
       var today=tds();
       try{ localStorage.removeItem('malm_'+acpPendingKitId+'_'+today+'_'+acpPendingTime); }catch(e){}
     }
-    showToast('আলহামদুলিল্লাহ! শুরু থেকে আদায় হয়েছে ✅', 3000);
     setTimeout(processAlarmMuhQueue, 300);
   }
+}
+
+function showFromStartCelebration(){
+  // ওভারলে বার্তা
+  var overlay = document.createElement('div');
+  overlay.id = 'from-start-celebration';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;pointer-events:none;overflow:hidden;';
+  // বার্তা টেক্সট
+  var msg = document.createElement('div');
+  msg.style.cssText = 'position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);text-align:center;animation:fromStartMsg 3.5s ease forwards;';
+  msg.innerHTML = '<div style="font-size:22px;font-weight:800;color:#f5c518;text-shadow:0 0 20px rgba(245,197,24,0.9);background:rgba(10,22,40,0.88);border:2px solid rgba(245,197,24,0.6);border-radius:16px;padding:18px 28px;line-height:1.7;">مَا شَاءَ اللَّه<br><span style="font-size:16px;color:#dce8f5;">মাশাআল্লাহ! আপনি শুরু থেকেই আরম্ভ করেছেন<br>আল্লাহ বরকত দিন 🌸</span></div>';
+  overlay.appendChild(msg);
+  // ফুলের পাপড়ি
+  var petals = ['🌸','🌺','🌻','🌼','🌷','💐','🌹','✨','🌸','🌺'];
+  for(var i=0; i<25; i++){
+    (function(idx){
+      var p = document.createElement('div');
+      var petal = petals[idx % petals.length];
+      var startX = Math.random() * 100;
+      var delay = Math.random() * 2;
+      var size = 16 + Math.random() * 16;
+      p.style.cssText = 'position:absolute;top:-40px;left:'+startX+'%;font-size:'+size+'px;animation:petalFall '+(2.5+Math.random()*2)+'s '+delay+'s ease-in forwards;';
+      p.textContent = petal;
+      overlay.appendChild(p);
+    })(i);
+  }
+  document.body.appendChild(overlay);
+  // স্টাইল যোগ করো (যদি না থাকে)
+  if(!document.getElementById('celebration-style')){
+    var style = document.createElement('style');
+    style.id = 'celebration-style';
+    style.textContent = '@keyframes petalFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(720deg);opacity:0;}} @keyframes fromStartMsg{0%{opacity:0;transform:translate(-50%,-50%) scale(0.7);}15%{opacity:1;transform:translate(-50%,-50%) scale(1.05);}25%{transform:translate(-50%,-50%) scale(1);}80%{opacity:1;}100%{opacity:0;transform:translate(-50%,-50%) scale(0.9);}}';
+    document.head.appendChild(style);
+  }
+  setTimeout(function(){ if(overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 3800);
 }
 
 // "নির্ধারিত সময়ে" বা "পরবর্তীতে" — মুহাসাবায় যাবে (সদকা মুহাসাবার ফলাফলে)
@@ -3856,7 +3929,7 @@ function updateNextAlarmBanner(){
       allTodayAlarms.push({
         time: almTime, mins: mins, window: alm.window||0,
         kitName: kit.icon+' '+kit.name, label: alm.label||'',
-        kitId: kit.id
+        kitId: kit.id, notDoneRate: (alm.notDoneRate!=null?alm.notDoneRate:null)
       });
     });
   });
@@ -3893,6 +3966,27 @@ function updateNextAlarmBanner(){
     else extraItems.push(a);
   });
 
+  // যদি আজকের কোনো এলার্ম না থাকে বা সব শেষ হয়ে গেছে, আগামীকালের এলার্ম দেখাও
+  if(topItems.length === 0){
+    var tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+    var tomorrowStr = tomorrow.getFullYear()+'-'+String(tomorrow.getMonth()+1).padStart(2,'0')+'-'+String(tomorrow.getDate()).padStart(2,'0');
+    var tomorrowAlarms = [];
+    S.kitabs.forEach(function(kit){
+      var k = gk(kit.id);
+      (k.alarms||[]).forEach(function(alm){
+        var almTime = alm.time||'';
+        if(!almTime) return;
+        if(!almMatchesDate(alm, tomorrowStr)) return;
+        var mins = parseInt(almTime.split(':')[0])*60 + parseInt(almTime.split(':')[1]);
+        tomorrowAlarms.push({ time: almTime, mins: mins, window: alm.window||0, kitName: kit.icon+' '+kit.name, label: alm.label||'', kitId: kit.id });
+      });
+    });
+    tomorrowAlarms.sort(function(a,b){ return a.mins - b.mins; });
+    tomorrowAlarms.forEach(function(a, i){
+      if(topItems.length < 3) topItems.push({ alarm: a, role: i===0 ? 'next1' : 'next2', isTomorrow: true });
+      else extraItems.push(a);
+    });
+  }
   if(topItems.length === 0){ banner.classList.remove('show'); return; }
   banner.classList.add('show');
 
@@ -3917,14 +4011,17 @@ function updateNextAlarmBanner(){
     var name = a.label ? a.label : a.kitName;
     var sub = a.label ? a.kitName : '';
     var itemClass = role==='current' ? ' nab-item-current' : '';
+    var tomorrowLabel = item.isTomorrow ? ' <span style="font-size:9px;color:#5daadc;background:rgba(52,152,219,0.15);border:1px solid rgba(52,152,219,0.35);border-radius:4px;padding:1px 5px;">আগামীকাল</span>' : '';
+    var cdDisplay = item.isTomorrow ? 'আগামীকাল' : cdText;
+    var notDoneStr = (a.notDoneRate!=null) ? ' <span style="font-size:9px;font-weight:700;color:#e07070;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:4px;padding:1px 5px;">❌ না করলে: ৳'+a.notDoneRate+'</span>' : '';
     visibleList.innerHTML +=
       '<div class="nab-item'+itemClass+'" data-kit-id="'+a.kitId+'" style="cursor:pointer;">'
       +'<span class="nab-badge '+badgeClass[role]+'">'+badgeText[role]+'</span>'
       +'<div class="nab-item-info">'
-      +'<div class="nab-item-time">'+formatTime12(a.time)+(a.window>0?' ('+toBn(a.window)+' মি.)':'')+'</div>'
+      +'<div class="nab-item-time">'+formatTime12(a.time)+(a.window>0?' ('+toBn(a.window)+' মি.)':'')+tomorrowLabel+notDoneStr+'</div>'
       +'<div class="nab-item-kitab">'+name+(sub?' — '+sub:'')+'</div>'
       +'</div>'
-      +'<div class="nab-item-cd">'+cdText+'</div>'
+      +'<div class="nab-item-cd">'+cdDisplay+'</div>'
       +'</div>';
   });
 
@@ -4016,6 +4113,7 @@ function checkAndShowFutureAlarmNotifications(){
   var tomorrowStr = tomorrow.getFullYear()+'-'+String(tomorrow.getMonth()+1).padStart(2,'0')+'-'+String(tomorrow.getDate()).padStart(2,'0');
 
   var todayAlarms=[], tomorrowAlarms=[];
+  var addedKeys = {};
 
   S.kitabs.forEach(function(kit){
     var k=gk(kit.id);
@@ -4023,21 +4121,22 @@ function checkAndShowFutureAlarmNotifications(){
       if(!alm.time) return;
       if(!alm.remind) return;
       var almMins=parseInt(alm.time.split(':')[0])*60+parseInt(alm.time.split(':')[1]);
-      var entry={time:alm.time, kitName:kit.icon+' '+kit.name, label:alm.label||'', mins:almMins, kitId:kit.id};
-      if(almMatchesDate(alm, today) && almMins>nowMins) todayAlarms.push(entry);
-      if(almMatchesDate(alm, tomorrowStr)) tomorrowAlarms.push(entry);
+      var key=kit.id+'_'+alm.time;
+      var entry={time:alm.time, kitName:kit.icon+' '+kit.name, label:alm.label||'', mins:almMins, kitId:kit.id, notDoneRate:(alm.notDoneRate!=null?alm.notDoneRate:null)};
+      // আজকের: সময় এখনো আসেনি
+      if(almMatchesDate(alm, today) && almMins>nowMins && !addedKeys['t_'+key]){
+        todayAlarms.push(entry); addedKeys['t_'+key]=true;
+      }
+      // আগামীকালের
+      if(almMatchesDate(alm, tomorrowStr) && !addedKeys['tm_'+key]){
+        tomorrowAlarms.push(entry); addedKeys['tm_'+key]=true;
+      }
     });
   });
 
   todayAlarms.sort(function(a,b){return a.mins-b.mins;});
   tomorrowAlarms.sort(function(a,b){return a.mins-b.mins;});
-
-  if(todayAlarms.length>0||tomorrowAlarms.length>0){
-    displayFutureAlarmNotice(todayAlarms, today, tomorrowAlarms, tomorrowStr);
-  } else {
-    var ex=document.getElementById('future-alarm-notice');
-    if(ex) ex.remove();
-  }
+  displayFutureAlarmNotice(todayAlarms, today, tomorrowAlarms, tomorrowStr);
 }
 
 // আজ ও আগামীকালের অ্যালার্ম নোটিশ একসাথে দেখাও
@@ -4066,9 +4165,10 @@ function displayFutureAlarmNotice(todayAlarms, todayStr, tomorrowAlarms, tomorro
       +'<div style="display:flex;flex-direction:column;gap:4px;">';
     todayAlarms.forEach(function(a){
       var name=a.label||a.kitName;
+      var ndTag = (a.notDoneRate!=null) ? ' <span style="font-size:9px;font-weight:700;color:#e07070;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:4px;padding:1px 4px;">❌ না করলে: ৳'+a.notDoneRate+'</span>' : '';
       html+='<div data-kit-id="'+a.kitId+'" style="display:flex;align-items:center;gap:7px;cursor:pointer;border-radius:6px;padding:2px 3px;transition:background 0.15s;" onmouseover="this.style.background=\'rgba(230,172,46,0.1)\'" onmouseout="this.style.background=\'transparent\'">'
         +'<span style="font-size:10px;font-weight:800;color:#e6ac2e;background:rgba(230,172,46,0.15);border:1px solid rgba(230,172,46,0.4);border-radius:5px;padding:1px 6px;white-space:nowrap;">'+formatTime12(a.time)+'</span>'
-        +'<span style="font-size:12px;color:#dce8f5;flex:1;">'+name+(a.label?'<span style="font-size:10px;color:#6b8caa;"> — '+a.kitName+'</span>':'')+'</span>'
+        +'<span style="font-size:12px;color:#dce8f5;flex:1;">'+name+(a.label?'<span style="font-size:10px;color:#6b8caa;"> — '+a.kitName+'</span>':'')+ndTag+'</span>'
         +'<span style="font-size:11px;color:#6b8caa;">›</span>'
         +'</div>';
     });
@@ -4082,26 +4182,44 @@ function displayFutureAlarmNotice(todayAlarms, todayStr, tomorrowAlarms, tomorro
       +'<div style="display:flex;flex-direction:column;gap:4px;">';
     tomorrowAlarms.forEach(function(a){
       var name=a.label||a.kitName;
+      var ndTag2 = (a.notDoneRate!=null) ? ' <span style="font-size:9px;font-weight:700;color:#e07070;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:4px;padding:1px 4px;">❌ না করলে: ৳'+a.notDoneRate+'</span>' : '';
       html+='<div data-kit-id="'+a.kitId+'" style="display:flex;align-items:center;gap:7px;cursor:pointer;border-radius:6px;padding:2px 3px;transition:background 0.15s;" onmouseover="this.style.background=\'rgba(93,170,220,0.1)\'" onmouseout="this.style.background=\'transparent\'">'
         +'<span style="font-size:10px;font-weight:800;color:#5daadc;background:rgba(52,152,219,0.15);border:1px solid rgba(52,152,219,0.35);border-radius:5px;padding:1px 6px;white-space:nowrap;">'+formatTime12(a.time)+'</span>'
-        +'<span style="font-size:12px;color:#dce8f5;flex:1;">'+name+(a.label?'<span style="font-size:10px;color:#6b8caa;"> — '+a.kitName+'</span>':'')+'</span>'
+        +'<span style="font-size:12px;color:#dce8f5;flex:1;">'+name+(a.label?'<span style="font-size:10px;color:#6b8caa;"> — '+a.kitName+'</span>':'')+ndTag2+'</span>'
         +'<span style="font-size:11px;color:#6b8caa;">›</span>'
         +'</div>';
     });
     html+='</div></div>';
   }
 
+  // দুটোই খালি হলে element সরাও
+  if(todayAlarms.length===0 && tomorrowAlarms.length===0){
+    var oldEx = document.getElementById(noticeId);
+    if(oldEx) oldEx.remove();
+    return;
+  }
+
+  // পুরনো element সরাও
+  var oldNotice = document.getElementById(noticeId);
+  if(oldNotice) oldNotice.remove();
+
   var notice=document.createElement('div');
   notice.id=noticeId;
   notice.style.cssText='background:rgba(255,255,255,0.04);border:1px solid rgba(245,197,24,0.2);border-radius:10px;margin-bottom:12px;padding:10px 14px;';
   notice.innerHTML=html;
 
+  // সবসময় pin-dashboard এর ঠিক আগে insert করো
   var pinContainer=document.getElementById('pin-dashboard');
   if(pinContainer){
-    pinContainer.parentNode.insertBefore(notice,pinContainer);
+    pinContainer.parentNode.insertBefore(notice, pinContainer);
   } else {
     var container=document.getElementById('today-dashboard');
     if(container) container.parentNode.insertBefore(notice,container);
+  }
+  // ফাঁকা সময় block কে notice এর পরে সরাও
+  var fsEl = document.getElementById('top-free-slots-block');
+  if(fsEl && notice.parentNode){
+    notice.parentNode.insertBefore(fsEl, notice.nextSibling);
   }
 }
 
@@ -4576,7 +4694,7 @@ document.getElementById('dup-add-anyway-btn').addEventListener('click', function
   document.getElementById('dup-alarm-popup').classList.remove('show');
   if(dupAlarmPending){
     var p=dupAlarmPending; dupAlarmPending=null;
-    saveAlarmFull(p.fid,p.tval,p.dval||'',p.lval,p.once||false,p.ndays||0,p.weekdays||[],p.wval||0);
+    saveAlarmFull(p.fid,p.tval,p.dval||'',p.lval,p.once||false,p.ndays||0,p.weekdays||[],p.wval||0,p.dates||[],p.remind||false,p.biweekly||false,p.biweeklyDay||0,p.monthday||0,p.yearmonth||0,p.yearday||0,p.notDoneRate!=null?p.notDoneRate:null);
   }
 });
 document.getElementById('dup-cancel-btn').addEventListener('click', function(){
@@ -4760,13 +4878,195 @@ function showAlarmMuhasaba(kitId, kitName, missTime){
   document.getElementById('muhassaba-popup').classList.add('show');
 }
 
-// অ্যালার্ম মিস queue প্রসেস করো — একটি শেষ হলে পরেরটি
+// অ্যালার্ম মিস queue প্রসেস করো — সব একসাথে list page এ দেখাও
 function processAlarmMuhQueue(){
   if(alarmMuhQueue.length === 0){ alarmMuhMode = false; return; }
-  var item = alarmMuhQueue.shift();
-  acpIsOnce = !!(item.once || item.expiry);
-  acpOnceExpiry = item.expiry||'';
-  showAlarmConfirm(item.kitId, item.kitName, item.time, item.label);
+  // শুধু ১টা থাকলে পুরনো popup পদ্ধতি
+  if(alarmMuhQueue.length === 1){
+    var item = alarmMuhQueue.shift();
+    acpIsOnce = !!(item.once || item.expiry);
+    acpOnceExpiry = item.expiry||'';
+    showAlarmConfirm(item.kitId, item.kitName, item.time, item.label);
+    return;
+  }
+  // একাধিক অ্যালার্ম — list page দেখাও
+  showAlarmListPage(alarmMuhQueue.splice(0));
+}
+
+// সব pending অ্যালার্ম একটি স্ক্রোলযোগ্য list page এ দেখাও
+function showAlarmListPage(items){
+  var overlay = document.getElementById('alarm-list-page');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'alarm-list-page';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(8,18,35,0.96);z-index:27000;display:flex;flex-direction:column;overflow:hidden;';
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = '';
+
+  // মাথার ড্র্যাগ বার
+  var dragBar = document.createElement('div');
+  dragBar.style.cssText = 'width:40px;height:4px;background:rgba(245,197,24,0.5);border-radius:4px;margin:10px auto 4px;cursor:pointer;flex-shrink:0;';
+  dragBar.title = 'নিচে চাপুন';
+  overlay.appendChild(dragBar);
+
+  // হেডার
+  var header = document.createElement('div');
+  header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 16px 8px;flex-shrink:0;border-bottom:1px solid rgba(245,197,24,0.2);';
+  header.innerHTML = '<div style="font-size:16px;font-weight:800;color:var(--gold);">⏰ মিসড অ্যালার্মসমূহ</div>'
+    +'<div style="font-size:12px;color:#6b8caa;">'+toBn(items.length)+'টি বাকি</div>';
+  overlay.appendChild(header);
+
+  // স্ক্রোলযোগ্য লিস্ট
+  var listEl = document.createElement('div');
+  listEl.id = 'alp-list';
+  listEl.style.cssText = 'flex:1;overflow-y:auto;padding:10px 12px;';
+  overlay.appendChild(listEl);
+
+  // drag to collapse
+  var collapsed = false;
+  var startY = 0;
+  dragBar.addEventListener('touchstart',function(e){ startY=e.touches[0].clientY; },{passive:true});
+  dragBar.addEventListener('touchend',function(e){
+    var dy = e.changedTouches[0].clientY - startY;
+    if(dy > 40){
+      // নিচে মিনিমাইজ করো
+      overlay.style.transform = 'translateY(calc(100% - 56px))';
+      overlay.style.transition = 'transform 0.3s';
+      collapsed = true;
+    } else if(dy < -20 && collapsed){
+      overlay.style.transform = 'translateY(0)';
+      collapsed = false;
+    }
+  });
+  dragBar.addEventListener('click', function(){
+    if(collapsed){ overlay.style.transform='translateY(0)'; collapsed=false; }
+    else { overlay.style.transform='translateY(calc(100% - 56px))'; overlay.style.transition='transform 0.3s'; collapsed=true; }
+  });
+
+  function renderList(){
+    listEl.innerHTML = '';
+    if(items.length===0){
+      alarmMuhQueue = [];
+      saveMuhQueue();
+      overlay.remove();
+      return;
+    }
+    // বাকি সংখ্যা আপডেট
+    header.querySelector('div:last-child').textContent = toBn(items.length)+'টি বাকি';
+    items.forEach(function(item, idx){
+      var alarms = gk(item.kitId).alarms||[];
+      var almObj = alarms.find(function(a){ return a.time===item.time; })||{};
+      var hasWin = !!(almObj.window && almObj.window>0);
+      var ndRate = almObj.notDoneRate!=null ? almObj.notDoneRate : null;
+
+      var card = document.createElement('div');
+      card.style.cssText = 'background:rgba(15,28,50,0.9);border:1px solid rgba(245,197,24,0.25);border-radius:14px;padding:10px 12px;margin-bottom:8px;';
+
+      // উপরে: অ্যালার্ম তথ্য (১ লাইন)
+      var infoHtml = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
+        +'<div style="font-size:13px;font-weight:800;color:var(--gold);flex:1;">'
+        +(item.label?item.label+' — ':'')+item.kitName+'</div>'
+        +'<div style="font-size:11px;color:#8ab0c8;white-space:nowrap;">'+formatTime12(item.time)
+        +(hasWin?' <span style="color:#5daadc;">('+toBn(almObj.window)+' মি.)</span>':'')+'</div>'
+        +(ndRate!=null?'<div style="font-size:10px;color:#e07070;">❌৳'+ndRate+'</div>':'')
+        +'</div>';
+
+      // নিচে: ৪টা বাটন পাশাপাশি
+      var opts = [
+        {id:'fs', icon:'📖', label:'শুরু থেকে', color:'rgba(39,174,96,0.9)'},
+        {id:'lt', icon:'⏩', label:'পরবর্তী', color:'rgba(52,152,219,0.85)'},
+        {id:'af', icon:'🗓️', label:'পরে আদায়', color:'rgba(180,120,40,0.85)'},
+        {id:'nd', icon:'❌', label:'করিনি', color:'rgba(180,60,60,0.85)'},
+      ];
+
+      card.innerHTML = infoHtml
+        +'<div id="alp-btns-'+idx+'" style="display:flex;gap:5px;"></div>';
+      listEl.appendChild(card);
+
+      var btnContainer = card.querySelector('#alp-btns-'+idx);
+      opts.forEach(function(opt){
+        var btn = document.createElement('button');
+        btn.style.cssText = 'background:'+opt.color+';border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:700;padding:7px 4px;cursor:pointer;font-family:"Noto Sans Bengali",sans-serif;text-align:center;flex:1;line-height:1.3;';
+        btn.innerHTML = opt.icon+'<br>'+opt.label;
+        btn.addEventListener('click', function(){
+          handleAlpAction(opt.id, item, idx, items, renderList);
+        });
+        btnContainer.appendChild(btn);
+      });
+    });
+  }
+
+  renderList();
+}
+
+function handleAlpAction(action, item, idx, items, renderList){
+  // item কে items থেকে সরাও
+  items.splice(items.findIndex(function(x){ return x.kitId===item.kitId && x.time===item.time; }), 1);
+  // alarmMuhQueue sync করো
+  alarmMuhQueue = items.slice();
+  saveMuhQueue();
+
+  // once/expiry flag সেট
+  var almObj = (gk(item.kitId).alarms||[]).find(function(a){ return a.time===item.time; })||{};
+  acpIsOnce = !!(almObj.once || almObj.expiry);
+  acpOnceExpiry = almObj.expiry||'';
+  acpPendingKitId = item.kitId;
+  acpPendingKitName = item.kitName;
+  acpPendingTime = item.time;
+  acpIsLive = false;
+  acpAlarmNotDoneRate = almObj.notDoneRate!=null ? almObj.notDoneRate : null;
+
+  if(action==='fs'){
+    // শুরু থেকে — সদকা নেই
+    if(acpIsOnce && acpPendingKitId){
+      var kk=gk(acpPendingKitId);
+      kk.alarms=kk.alarms.filter(function(a){ return !(a.time===acpPendingTime && (a.once||a.expiry)); });
+      ss(); renderAll(); acpIsOnce=false;
+    }
+    try{ localStorage.removeItem('malm_'+acpPendingKitId+'_'+tds()+'_'+acpPendingTime); }catch(e){}
+    showFromStartCelebration();
+  } else if(action==='lt'){
+    // পরবর্তী সময়ে
+    acpGoMuhasaba(SADAQA_ON_TIME_RATE);
+  } else if(action==='af'){
+    // নির্ধারিত সময়ের পরে আদায়
+    acpLateAdayHelper();
+  } else if(action==='nd'){
+    // আদায় করিনি
+    acpNotDone();
+  }
+
+  // list re-render
+  setTimeout(function(){
+    renderList();
+    if(items.length===0){
+      var ov = document.getElementById('alarm-list-page');
+      if(ov) ov.remove();
+    }
+  }, 400);
+}
+
+function acpLateAdayHelper(){
+  // মুহাসাবা popup এ নির্ধারিত সময়ের পরে আদায় প্রক্রিয়া
+  if(acpIsOnce && acpPendingKitId){
+    var kk=gk(acpPendingKitId);
+    kk.alarms=kk.alarms.filter(function(a){ return !(a.time===acpPendingTime && (a.once||a.expiry)); });
+    ss(); renderAll(); acpIsOnce=false;
+  }
+  if(acpPendingKitId){
+    var today=tds();
+    try{ localStorage.removeItem('malm_'+acpPendingKitId+'_'+today+'_'+acpPendingTime); }catch(e){}
+    if(acpAlarmNotDoneRate!=null){
+      var kk2=gk(acpPendingKitId);
+      if(!kk2.alarmSadaqa) kk2.alarmSadaqa=0;
+      kk2.alarmSadaqa=Math.round((kk2.alarmSadaqa+acpAlarmNotDoneRate)*100)/100;
+      ss();
+      var _r=acpAlarmNotDoneRate;
+      showToast('🕐 দেরিতে আদায় — '+((_r>=1)?toBn(_r)+' টাকা':toBn(Math.round(_r*100))+' পয়সা')+' সদকা জমা।',3000);
+    }
+  }
+  setTimeout(processAlarmMuhQueue, 300);
 }
 // আজকের টার্গেট পূরণ হয়েছে কিনা
 function isTargetDone(kitId){
@@ -4818,6 +5118,7 @@ function checkMissedAlarms(){
       missed.push(kit.name+' ('+almLabel+')');
       // once/expiry flag queue তে রাখো — popup শেষে মুছবে
       alarmMuhQueue.push({kitId: kit.id, kitName: kit.name, time: almTime, label: almLabel, once: alm.once||false, expiry: alm.expiry||''});
+      saveMuhQueue();
     });
   });
 
@@ -4895,7 +5196,21 @@ setInterval(function(){
 var muhPendingDays = 0;
 var muhPendingFid = null;
 var alarmMuhMode = false; // সময় মিসের মুহাসাবা মোড
-var alarmMuhQueue = []; // {kitId, kitName, time} — সময় মিসের queue
+// alarmMuhQueue — localStorage থেকে restore করো (অ্যাপ বন্ধ হলেও টিকে থাকে)
+var alarmMuhQueue = (function(){
+  try{
+    var saved = localStorage.getItem('almMuhQueue');
+    return saved ? JSON.parse(saved) : [];
+  }catch(e){ return []; }
+})();
+function saveMuhQueue(){ try{ localStorage.setItem('almMuhQueue', JSON.stringify(alarmMuhQueue)); }catch(e){} }
+// পেজ লোডে pending queue থাকলে দেখাও
+setTimeout(function(){
+  if(alarmMuhQueue.length > 0){
+    alarmMuhMode = true;
+    setTimeout(processAlarmMuhQueue, 800);
+  }
+}, 1200);
 
 function getLockLevel(lazyDays){
   var lazy = lazyDays || 0;
@@ -5064,13 +5379,25 @@ document.getElementById('muh-lazy').addEventListener('click', function(){
     if(!k.lazyDays) k.lazyDays = 0;
     k.lazyDays += muhPendingDays;
     if(!k.sadaqa) k.sadaqa = 0;
-    k.sadaqa = Math.round(((k.sadaqa||0) + muhPendingDays * SADAQA_TARGET_RATE) * 100) / 100;
+    // প্রতিটি মিস দিনে কতটুকু পড়া হয়েছিল তার উপর ভিত্তি করে proportional সদকা
+    var ref2 = k.lrd || k.sd || '';
+    var totalSadaqa = 0;
+    var dt2 = k.dt || 0;
+    for(var di=1; di<=muhPendingDays; di++){
+      var dObj2 = ref2 ? new Date(ref2) : new Date();
+      dObj2.setDate(dObj2.getDate() + di);
+      var ds2 = dObj2.getFullYear()+'-'+String(dObj2.getMonth()+1).padStart(2,'0')+'-'+String(dObj2.getDate()).padStart(2,'0');
+      var dayRead = k.h[ds2] || 0;
+      var ratio2 = dt2 > 0 ? Math.max(0, 1 - (dayRead/dt2)) : 1;
+      totalSadaqa += SADAQA_TARGET_RATE * ratio2;
+    }
+    totalSadaqa = Math.round(totalSadaqa*100)/100;
+    k.sadaqa = Math.round(((k.sadaqa||0) + totalSadaqa) * 100) / 100;
     ss(); applyLock();
     var lv = getLockLevel(k.lazyDays);
     var lockMsgs = ['','⚠️ লেভেল ১ লক হয়েছে।','🔒 লেভেল ২ লক হয়েছে।','🚫 লেভেল ৩ — বেশিরভাগ লক!'];
-    var _addedSdq=Math.round(muhPendingDays*SADAQA_TARGET_RATE*100)/100;
-    var _sdqStr=_addedSdq>=1?toBn(_addedSdq)+' টাকা':toBn(Math.round(_addedSdq*100))+' পয়সা';
-    showToast('🍂 '+toBn(muhPendingDays)+' দিন মিস — '+_sdqStr+' সদকা জমা হলো। '+lockMsgs[lv], 5000);
+    var _sdqStr2=totalSadaqa>=1?toBn(totalSadaqa)+' টাকা':toBn(Math.round(totalSadaqa*100))+' পয়সা';
+    showToast('🍂 '+toBn(muhPendingDays)+' দিন মিস — '+_sdqStr2+' সদকা জমা হলো। '+lockMsgs[lv], 5000);
   }
   document.getElementById('muhassaba-popup').classList.remove('show');
   muhPendingDays = 0; muhPendingFid = null;
@@ -5103,7 +5430,7 @@ document.getElementById('muh-confirm').addEventListener('click', function(){
     if(titleEl) titleEl.textContent = 'মুহাসাবা — জবাবদিহিতা';
     if(daysEl) daysEl.textContent = 'কিছুদিন পড়া হয়নি।';
     if(lazyCount > 0){
-      showToast('মিশ্র — '+toBn(lazyCount)+' অলসতা, '+(alarmMuhRate>=1?toBn(alarmMuhRate):toBn(Math.round(alarmMuhRate*100))+' পয়সা')+' × '+toBn(lazyCount)+' = '+(function(){var tot=Math.round(lazyCount*alarmMuhRate*100)/100;return tot>=1?toBn(tot)+' টাকা':toBn(Math.round(tot*100))+' পয়সা';})(),' সদকা জমা হলো।', 4000);
+      showToast('মিশ্র — '+toBn(lazyCount)+' অলসতা, '+(alarmMuhRate>=1?toBn(alarmMuhRate):toBn(Math.round(alarmMuhRate*100))+' পয়সা')+' × '+toBn(lazyCount)+' = '+(function(){var tot=Math.round(lazyCount*alarmMuhRate*100)/100;return tot>=1?toBn(tot)+' টাকা':toBn(Math.round(tot*100))+' পয়সা';})()+ ' সদকা জমা হলো।', 4000);
     } else {
       showToast('✅ সব যৌক্তিক — সদকা নেই।', 3000);
     }
@@ -5117,15 +5444,28 @@ document.getElementById('muh-confirm').addEventListener('click', function(){
     if(!k.lazyDays) k.lazyDays = 0;
     k.lazyDays += lazyCount;
     if(!k.sadaqa) k.sadaqa = 0;
-    k.sadaqa = Math.round(((k.sadaqa||0) + lazyCount * SADAQA_TARGET_RATE) * 100) / 100;
+    // proportional: শুধু lazy দিনগুলোর partial miss হিসাব
+    var ref3 = k.lrd || k.sd || '';
+    var dt3 = k.dt || 0;
+    var totalMixedSdq = 0;
+    // lazy দিনগুলো (log দিন এর পরে) — approximation: শেষ lazyCount দিন
+    var logOffset = logDays;
+    for(var di3=logOffset+1; di3<=muhPendingDays; di3++){
+      var dObj3 = ref3 ? new Date(ref3) : new Date();
+      dObj3.setDate(dObj3.getDate() + di3);
+      var ds3 = dObj3.getFullYear()+'-'+String(dObj3.getMonth()+1).padStart(2,'0')+'-'+String(dObj3.getDate()).padStart(2,'0');
+      var dayRead3 = k.h[ds3] || 0;
+      var ratio3 = dt3 > 0 ? Math.max(0, 1-(dayRead3/dt3)) : 1;
+      totalMixedSdq += SADAQA_TARGET_RATE * ratio3;
+    }
+    totalMixedSdq = Math.round(totalMixedSdq*100)/100;
+    k.sadaqa = Math.round(((k.sadaqa||0) + totalMixedSdq) * 100) / 100;
     ss(); applyLock();
   }
   document.getElementById('muhassaba-popup').classList.remove('show');
   document.getElementById('muh-mixed-form').style.display = 'none';
   if(lazyCount > 0){
-    var _mixedSdq=Math.round(lazyCount*SADAQA_TARGET_RATE*100)/100;
-    var _mixedStr=_mixedSdq>=1?toBn(_mixedSdq)+' টাকা':toBn(Math.round(_mixedSdq*100))+' পয়সা';
-    showToast(toBn(logDays)+' দিন যৌক্তিক, '+toBn(lazyCount)+' দিন অলসতা — '+_mixedStr+' সদকা জমা হলো।', 5000);
+    showToast(toBn(logDays)+' দিন যৌক্তিক, '+toBn(lazyCount)+' দিন অলসতা — সদকা proportional হিসেবে জমা হলো।', 5000);
   } else {
     showToast('✅ সব দিন যৌক্তিক — লক নেই।', 3000);
   }
