@@ -3924,6 +3924,7 @@ function updateNextAlarmBanner(){
     alarms.forEach(function(alm){
       var almTime = alm.time||'';
       if(!almTime) return;
+      if(alm.disabled) return; // বন্ধ অ্যালার্ম দেখাবে না
       if(!almMatchesDate(alm, today)) return;
       var mins = parseInt(almTime.split(':')[0])*60 + parseInt(almTime.split(':')[1]);
       allTodayAlarms.push({
@@ -4119,6 +4120,7 @@ function checkAndShowFutureAlarmNotifications(){
     var k=gk(kit.id);
     (k.alarms||[]).forEach(function(alm){
       if(!alm.time) return;
+      if(alm.disabled) return; // বন্ধ অ্যালার্ম দেখাবে না
       if(!alm.remind) return;
       var almMins=parseInt(alm.time.split(':')[0])*60+parseInt(alm.time.split(':')[1]);
       var key=kit.id+'_'+alm.time;
@@ -5145,7 +5147,8 @@ function checkMissedAlarms(){
   }
 }
 
-setInterval(function(){
+// অ্যালার্ম চেক — named function হিসেবে রাখা হয়েছে যাতে একাধিক জায়গা থেকে call করা যায়
+function runAlarmCheck(){
   var now=new Date();
   var hm=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
   var today=tds();
@@ -5173,21 +5176,40 @@ setInterval(function(){
         if(!alreadyFired){
           try{ localStorage.setItem(key,'1'); }catch(e){}
           curAlarmKit=kit;
-        playAlarmTone();
-        flashScreen('rgba(245,197,24,0.35)',2);
-        if('Notification' in window&&Notification.permission==='granted')new Notification(kit.name+' পড়ার সময়!',{body:'বিসমিল্লাহ — পড়া শুরু করুন।'});
-        // সরাসরি confirm popup দেখাও — "শুরু করছেন কিনা" প্রশ্ন
-        showAlarmConfirmLive(kit.id, kit.name, hm, alm.label||'');
+          playAlarmTone();
+          flashScreen('rgba(245,197,24,0.35)',2);
+          if('Notification' in window&&Notification.permission==='granted')new Notification(kit.name+' পড়ার সময়!',{body:'বিসমিল্লাহ — পড়া শুরু করুন।'});
+          // সরাসরি confirm popup দেখাও — "শুরু করছেন কিনা" প্রশ্ন
+          showAlarmConfirmLive(kit.id, kit.name, hm, alm.label||'');
         }
       }
     });
   });
-},15000);
+}
+
+// প্রতি ১৫ সেকেন্ডে চেক (স্বাভাবিক — file manager থেকে খুললে)
+setInterval(runAlarmCheck, 15000);
 
 // অ্যাপ খোলা থাকলেও প্রতি মিনিটে মিসড অ্যালার্ম চেক
 setInterval(function(){
   checkMissedAlarms();
 }, 60000);
+
+// Web Worker — PWA-তে active থাকলেও alarm check করার জন্য
+(function(){
+  try{
+    var workerCode = 'setInterval(function(){ postMessage("tick"); }, 15000);';
+    var blob = new Blob([workerCode], {type:'application/javascript'});
+    var worker = new Worker(URL.createObjectURL(blob));
+    worker.onmessage = function(){
+      runAlarmCheck();
+    };
+  }catch(e){
+    // Web Worker কাজ না করলে setInterval-ই চলবে
+  }
+})();
+
+
 
 
 
